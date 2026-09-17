@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tabla Periódica Interactiva - Limpieza de Filtros</title>
+  <title>Tabla Periódica Interactiva - Examen y Fichas</title>
   <style>
     :root {
       --bg-color: #f8f9fa;
@@ -28,7 +28,11 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: var(--bg-color);
+      /* Overlay de color superpuesto a la imagen para reducir saturación y mejorar legibilidad */
+      background-image: linear-gradient(rgba(34, 49, 63, 0.75), rgba(34, 49, 63, 0.75)), url('Fondo_tabla.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       margin: 15px;
       display: flex;
       flex-direction: column;
@@ -36,22 +40,26 @@
     }
 
     h1 {
-      color: var(--header-bg);
+      /* Ajuste de contraste para que resalte sobre el fondo azul */
+      color: #ffffff;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
       margin-bottom: 10px;
-      font-size: 26px;
+      font-size: 32px;
+      letter-spacing: 1px;
     }
 
-    /* Panel de Botones */
+    /* Panel de Botones (Con efecto Glassmorphism) */
     .panel-botones {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
       margin-bottom: 15px;
-      background: white;
+      background: rgba(255, 255, 255, 0.85); /* Semi-transparente */
+      backdrop-filter: blur(8px); /* Desenfoque del fondo */
       padding: 15px 20px;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     button {
@@ -74,7 +82,7 @@
     button.btn-limpiar { background-color: #e67e22; border-color: #e67e22; }
     button.btn-limpiar:hover { background-color: #d35400; }
 
-    /* Leyenda */
+    /* Leyenda (Con efecto Glassmorphism) */
     .leyenda {
       display: flex;
       flex-wrap: wrap;
@@ -82,10 +90,11 @@
       justify-content: center;
       max-width: 1200px;
       margin-bottom: 15px;
-      background: white;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
       padding: 12px 18px;
       border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
     .item-leyenda {
@@ -94,7 +103,7 @@
       gap: 6px;
       font-size: 13px;
       font-weight: 600;
-      color: #333;
+      color: #111;
       cursor: pointer;
       user-select: none;
     }
@@ -110,17 +119,18 @@
       width: 16px;
       height: 16px;
       border-radius: 3px;
-      border: 1px solid rgba(0,0,0,0.2);
+      border: 1px solid rgba(0,0,0,0.3);
     }
 
-    /* Contenedor Principal */
+    /* Contenedor Principal (Con efecto Glassmorphism) */
     .tabla-container {
       overflow-x: auto;
       max-width: 100%;
-      background: white;
+      background: rgba(255, 255, 255, 0.65); /* Más transparente para lucir la tabla */
+      backdrop-filter: blur(10px);
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
       position: relative;
     }
 
@@ -140,9 +150,9 @@
       height: 210px;
       border: 5px solid rgba(0, 0, 0, 0.15);
       border-radius: 8px;
-      background: white;
+      background: rgba(255, 255, 255, 0.95); /* Opacidad alta para lectura clara */
       box-sizing: border-box;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
       opacity: 0;
       visibility: hidden;
       transition: all 0.2s ease;
@@ -161,7 +171,7 @@
 
     .visor-tarjeta:hover {
       transform: scale(1.02);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
 
     .visor-tarjeta.visible {
@@ -205,7 +215,7 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(248, 249, 250, 0.9);
+      background: rgba(0, 0, 0, 0.75); /* Oscurecemos el overlay para mayor inmersión con la imagen */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -227,7 +237,7 @@
       border-radius: 12px;
       padding: 40px;
       position: relative;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     }
 
     .btn-cerrar-modal {
@@ -275,18 +285,18 @@
     .cabecera-columna {
       display: flex; align-items: center; justify-content: center;
       height: 30px; font-size: 12px; font-weight: bold; color: #333;
-      background-color: #e0e0e0; border-radius: 4px; cursor: pointer; user-select: none;
+      background-color: rgba(224, 224, 224, 0.9); border-radius: 4px; cursor: pointer; user-select: none;
     }
     .cabecera-columna.seleccionada { background-color: #2c3e50; color: white; }
     .separador-bloque { grid-column: span 18; height: 20px; }
 
     .celda {
-      width: 80px; height: 85px; border: 1px solid var(--border-color);
+      width: 80px; height: 85px; border: 1px solid rgba(0,0,0,0.1);
       border-radius: 6px; display: flex; flex-direction: column;
       justify-content: space-between; padding: 4px; box-sizing: border-box;
-      cursor: pointer; transition: transform 0.1s, opacity 0.3s ease;
+      cursor: pointer; transition: transform 0.1s, opacity 0.3s ease, box-shadow 0.2s ease;
     }
-    .celda:hover:not(.atenuada) { transform: scale(1.04); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+    .celda:hover:not(.atenuada) { transform: scale(1.04); box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2; }
 
     .alcalinos { background-color: var(--color-alcalinos); }
     .alcalinoterreos { background-color: var(--color-alcalinoterreos); }
@@ -310,7 +320,7 @@
     .celda.correcto { background-color: var(--correct-color) !important; border-color: #2e7d32 !important; }
     .celda.incorrecto { background-color: var(--incorrect-color) !important; border-color: #c62828 !important; }
 
-    #marcador { margin-top: 15px; font-size: 18px; font-weight: bold; }
+    #marcador { margin-top: 15px; font-size: 18px; font-weight: bold; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;}
   </style>
 </head>
 <body>
@@ -368,7 +378,7 @@
     </div>
   </div>
 
-  <div id="marcador"></div>
+  <div id="marcador" style="display:none;"></div> <!-- Oculto por defecto hasta que tenga texto -->
 
   <!-- ESTRUCTURA DEL MODAL (Ficha ampliada) -->
   <div id="modal-detalle" class="modal-overlay" onclick="cerrarModal(event)">
@@ -754,7 +764,7 @@
       enModoTablaCompleta = false;
       ocultarVisoresCentrales();
 
-      document.getElementById("marcador").textContent = "";
+      document.getElementById("marcador").style.display = "none";
 
       const celdas = document.querySelectorAll(".celda");
       celdas.forEach(celda => {
@@ -783,7 +793,7 @@
         inputs.forEach(i => i.value = "");
       });
 
-      document.getElementById("marcador").textContent = "";
+      document.getElementById("marcador").style.display = "none";
       actualizarFiltros();
     }
 
@@ -804,7 +814,10 @@
 
       // Validación defensiva contra NaN (División por cero) si no hay elementos seleccionados
       if (totalSeleccionados === 0) {
-        document.getElementById("marcador").textContent = "No hay elementos activos para corregir.";
+        const marcador = document.getElementById("marcador");
+        marcador.textContent = "No hay elementos activos para corregir.";
+        marcador.style.display = "block";
+        marcador.style.color = "#ffffff";
         return;
       }
 
@@ -856,8 +869,10 @@
       visorResultados.classList.add("visible");
 
       // Update inferior
-      document.getElementById("marcador").textContent = `Corrección completada. Nota: ${notaFinal} / 10`;
-      document.getElementById("marcador").style.color = notaFinal >= 5 ? "#27ae60" : "#c0392b";
+      const marcador = document.getElementById("marcador");
+      marcador.style.display = "block";
+      marcador.textContent = `Corrección completada. Nota: ${notaFinal} / 10`;
+      marcador.style.color = "#ffffff"; // Contraste con el fondo azul
     }
 
     function mostrarTablaCompleta() {
@@ -881,8 +896,10 @@
         inN.disabled = true;
       });
 
-      document.getElementById("marcador").textContent = "Tabla completa mostrada. Haz clic en cualquier casilla para inspeccionar el elemento en el visor central.";
-      document.getElementById("marcador").style.color = "#2980b9";
+      const marcador = document.getElementById("marcador");
+      marcador.style.display = "block";
+      marcador.textContent = "Tabla completa mostrada. Haz clic en cualquier casilla para inspeccionar el elemento en el visor central.";
+      marcador.style.color = "#ffffff"; // Contraste con el fondo azul
     }
 
     construirTabla();
