@@ -140,6 +140,7 @@
       height: 210px;
       border: 5px solid rgba(0, 0, 0, 0.15);
       border-radius: 8px;
+      background: white;
       box-sizing: border-box;
       box-shadow: 0 4px 12px rgba(0,0,0,0.12);
       opacity: 0;
@@ -148,7 +149,7 @@
       z-index: 5;
     }
 
-    /* Visor de Tarjeta de Elemento */
+    /* Visor de Tarjeta (Ficha interactiva) */
     .visor-tarjeta {
       padding: 10px;
       display: flex;
@@ -178,9 +179,8 @@
     .visor-footer { display: flex; justify-content: flex-start; align-items: flex-end; width: 100%; }
     .visor-masa { font-size: 18px; font-weight: 600; color: #222; }
 
-    /* Visor de Resultados (NUEVO) */
+    /* Visor de Resultados del Examen */
     .visor-resultados {
-      background: white;
       padding: 15px;
       display: flex;
       flex-direction: column;
@@ -192,16 +192,16 @@
     .visor-resultados.visible {
       opacity: 1;
       visibility: visible;
-      pointer-events: auto;
+      pointer-events: none;
     }
 
-    .res-titulo { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; width: 100%; border-bottom: 2px solid #ecf0f1; padding-bottom: 5px;}
-    .res-stat { font-size: 14px; margin: 4px 0; color: #333; width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 500;}
-    .res-nota { font-size: 48px; font-weight: 900; margin-top: 15px; line-height: 1;}
+    .res-titulo { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 12px; width: 100%; border-bottom: 2px solid #ecf0f1; padding-bottom: 5px;}
+    .res-stat { font-size: 13px; margin: 4px 0; color: #333; width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 600;}
+    .res-nota { font-size: 46px; font-weight: 900; margin-top: 12px; line-height: 1;}
     .nota-aprobado { color: #27ae60; }
     .nota-suspenso { color: #c0392b; }
 
-    /* --- ESTILOS DEL MODAL --- */
+    /* --- ESTILOS DEL MODAL (Ficha ampliada) --- */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -215,25 +215,58 @@
       transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
-    .modal-overlay.activo { opacity: 1; visibility: visible; }
+    .modal-overlay.activo {
+      opacity: 1;
+      visibility: visible;
+    }
 
     .modal-content {
-      background: #ffffff; width: 90%; max-width: 450px; border-radius: 12px;
-      padding: 40px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      background: #ffffff;
+      width: 90%;
+      max-width: 450px;
+      border-radius: 12px;
+      padding: 40px;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
     }
 
     .btn-cerrar-modal {
-      position: absolute; top: 15px; right: 20px; background: none; border: none;
-      font-size: 28px; color: #95a5a6; cursor: pointer; transition: color 0.2s;
+      position: absolute;
+      top: 15px; right: 20px;
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #95a5a6;
+      cursor: pointer;
+      transition: color 0.2s;
     }
 
     .btn-cerrar-modal:hover { color: #2c3e50; }
 
-    .modal-header h2 { margin: 0; font-size: 38px; color: #111; font-weight: 500; display: flex; align-items: flex-start; }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 38px;
+      color: #111;
+      font-weight: 500;
+      display: flex;
+      align-items: flex-start;
+    }
+
     .modal-header sup { font-size: 20px; font-weight: normal; margin-left: 2px; }
-    .modal-grupo { display: flex; align-items: center; gap: 8px; margin-top: 5px; color: #7f8c8d; font-size: 15px; }
+
+    .modal-grupo {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 5px; color: #7f8c8d; font-size: 15px;
+    }
+
     .modal-grupo .punto-color { width: 14px; height: 14px; border-radius: 50%; }
-    .modal-bohr { width: 160px; height: 160px; margin: 40px auto; display: flex; justify-content: center; align-items: center; }
+
+    .modal-bohr {
+      width: 160px; height: 160px;
+      margin: 40px auto;
+      display: flex; justify-content: center; align-items: center;
+    }
+
     .modal-detalles p { margin: 15px 0; font-size: 15px; color: #333; line-height: 1.6; }
     .modal-detalles .info-destacada { font-size: 16px; margin-bottom: 25px; }
     .modal-detalles strong { color: #111; font-weight: 500; }
@@ -310,7 +343,7 @@
   <div class="tabla-container">
     <div id="grid-tabla" class="tabla-periodica"></div>
 
-    <!-- Visor de Tarjeta (Detalle de Elemento) -->
+    <!-- 1. Visor de Tarjeta (Información del elemento) -->
     <div id="visor-tarjeta" class="visor-central visor-tarjeta">
       <div class="visor-header">
         <div id="v-z" class="visor-z"></div>
@@ -325,7 +358,7 @@
       </div>
     </div>
 
-    <!-- Visor de Resultados (NUEVO - Aplicando SRP) -->
+    <!-- 2. Visor de Resultados (Corrección) -->
     <div id="visor-resultados" class="visor-central visor-resultados">
       <div class="res-titulo">Resultados</div>
       <div class="res-stat"><span>Seleccionados:</span> <strong id="r-total">0</strong></div>
@@ -337,7 +370,7 @@
 
   <div id="marcador"></div>
 
-  <!-- ESTRUCTURA DEL MODAL -->
+  <!-- ESTRUCTURA DEL MODAL (Ficha ampliada) -->
   <div id="modal-detalle" class="modal-overlay" onclick="cerrarModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <button class="btn-cerrar-modal" onclick="cerrarModal()">&times;</button>
@@ -613,16 +646,16 @@
     /**
      * Oculta de manera segura todos los modales centrales (SRP)
      */
-    function ocultarVisores() {
+    function ocultarVisoresCentrales() {
       document.getElementById("visor-tarjeta").classList.remove("visible");
       document.getElementById("visor-resultados").classList.remove("visible");
       elementoActivoGlobal = null; 
     }
 
     function mostrarDetalleElemento(elem) {
-      elementoActivoGlobal = elem; 
-      ocultarVisores(); // Cerramos resultados si estuvieran abiertos
-
+      ocultarVisoresCentrales(); // Primero limpiamos todo
+      elementoActivoGlobal = elem; // Luego aseguramos el nuevo estado global
+      
       const visor = document.getElementById("visor-tarjeta");
       document.getElementById("v-z").textContent = elem.z;
       document.getElementById("v-val").innerHTML = elem.val || "";
@@ -630,6 +663,7 @@
       document.getElementById("v-nombre").textContent = elem.n;
       document.getElementById("v-masa").textContent = elem.m || "";
 
+      // Restauramos las clases base limpiamente y añadimos la del grupo
       visor.className = `visor-central visor-tarjeta visible ${elem.g}`;
     }
 
@@ -718,7 +752,7 @@
     function cambiarModo(modo) {
       modoActual = modo;
       enModoTablaCompleta = false;
-      ocultarVisores();
+      ocultarVisoresCentrales();
 
       document.getElementById("marcador").textContent = "";
 
@@ -734,7 +768,7 @@
 
     function limpiarTabla() {
       enModoTablaCompleta = false;
-      ocultarVisores();
+      ocultarVisoresCentrales();
 
       const checkboxes = document.querySelectorAll('.leyenda input[type="checkbox"]');
       checkboxes.forEach(cb => cb.checked = false);
@@ -758,7 +792,7 @@
     }
 
     /**
-     * Evalúa las respuestas del usuario y renderiza la puntuación en el nuevo visor central
+     * Evalúa las respuestas y renderiza el resultado en el contenedor central
      */
     function corregir() {
       const celdasVisibles = document.querySelectorAll(".celda:not(.atenuada)");
@@ -766,9 +800,9 @@
       let aciertos = 0;
 
       const visorResultados = document.getElementById("visor-resultados");
-      ocultarVisores(); // Limpiamos la zona central
+      ocultarVisoresCentrales(); // Limpiamos la zona central
 
-      // Validación defensiva: Evitar calcular notas si no hay elementos (División por cero)
+      // Validación defensiva contra NaN (División por cero) si no hay elementos seleccionados
       if (totalSeleccionados === 0) {
         document.getElementById("marcador").textContent = "No hay elementos activos para corregir.";
         return;
@@ -805,11 +839,11 @@
         }
       });
 
-      // Cálculos matemáticos de la corrección
+      // Cálculos del examen
       const fallos = totalSeleccionados - aciertos;
       const notaFinal = ((aciertos / totalSeleccionados) * 10).toFixed(1);
 
-      // Inyectar datos en el nuevo visor de Resultados
+      // Inyección de resultados en el DOM (Visor central)
       document.getElementById("r-total").textContent = totalSeleccionados;
       document.getElementById("r-correctos").textContent = aciertos;
       document.getElementById("r-incorrectos").textContent = fallos;
@@ -818,17 +852,17 @@
       elNota.textContent = notaFinal;
       elNota.className = "res-nota " + (notaFinal >= 5 ? "nota-aprobado" : "nota-suspenso");
 
-      // Mostrar el panel de resultados
+      // Mostramos la tarjeta de resultados
       visorResultados.classList.add("visible");
 
-      // Actualizar marcador inferior como log
+      // Update inferior
       document.getElementById("marcador").textContent = `Corrección completada. Nota: ${notaFinal} / 10`;
       document.getElementById("marcador").style.color = notaFinal >= 5 ? "#27ae60" : "#c0392b";
     }
 
     function mostrarTablaCompleta() {
       enModoTablaCompleta = true;
-      ocultarVisores();
+      ocultarVisoresCentrales();
 
       const celdasVisibles = document.querySelectorAll(".celda:not(.atenuada)");
       celdasVisibles.forEach(celda => {
