@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabla Periódica Interactiva - Examen y Fichas</title>
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --border-color: #b0bec5;
+      --header-bg: #2c3e50;
+
+      /* Colores por grupo químico */
+      --color-alcalinos: #ffe0b2;
+      --color-alcalinoterreos: #fff9c4;
+      --color-transicion: #e1bee7;
+      --color-lantanidos: #f8bbd0;
+      --color-actinidos: #f48fb1;
+      --color-otros-metales: #cfd8dc;
+      --color-metaloides: #d1c4e9;
+      --color-no-metales: #c8e6c9;
+      --color-halogenos: #b2dfdb;
+      --color-gases-nobles: #bbdefb;
+
+      --correct-color: #81c784;
+      --incorrect-color: #e57373;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      /* Overlay de color superpuesto a la imagen para reducir saturación y mejorar legibilidad */
+      background-image: linear-gradient(rgba(34, 49, 63, 0.75), rgba(34, 49, 63, 0.75)), url('Fondo_tabla.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      margin: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      /* Ajuste de contraste para que resalte sobre el fondo azul */
+      color: #ffffff;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+      margin-bottom: 10px;
+      font-size: 32px;
+      letter-spacing: 1px;
+    }
+
+    /* Panel de Botones (Con efecto Glassmorphism) */
+    .panel-botones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.85); /* Semi-transparente */
+      backdrop-filter: blur(8px); /* Desenfoque del fondo */
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      border: 1px solid #16a085;
+      background-color: #1abc9c;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover { background-color: #16a085; }
+    button.btn-accion { background-color: #2980b9; border-color: #2980b9; }
+    button.btn-accion:hover { background-color: #1c5980; }
+    button.btn-corregir { background-color: #27ae60; border-color: #27ae60; }
+    button.btn-corregir:hover { background-color: #1e8449; }
+    button.btn-limpiar { background-color: #e67e22; border-color: #e67e22; }
+    button.btn-limpiar:hover { background-color: #d35400; }
+
+    /* Leyenda (Con efecto Glassmorphism) */
+    .leyenda {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      max-width: 1200px;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .item-leyenda {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #111;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .item-leyenda input[type="checkbox"] {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+      accent-color: #2c3e50;
+    }
+
+    .muestra-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.3);
+    }
+
+    /* Contenedor Principal (Con efecto Glassmorphism) */
+    .tabla-container {
+      overflow-x: auto;
+      max-width: 100%;
+      background: rgba(255, 255, 255, 0.65); /* Más transparente para lucir la tabla */
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .tabla-periodica {
+      display: grid;
+      grid-template-columns: repeat(18, 80px);
+      grid-gap: 5px;
+      position: relative;
+    }
+
+    /* --- Visores Centrales (Posición compartida) --- */
+    .visor-central {
+      position: absolute;
+      top: 60px;
+      left: calc(4 * 85px + 25px);
+      width: 210px;
+      height: 210px;
+      border: 5px solid rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.95); /* Opacidad alta para lectura clara */
+      box-sizing: border-box;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      z-index: 5;
+    }
+
+    /* Visor de Tarjeta (Ficha interactiva) */
+    .visor-tarjeta {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer; 
+      pointer-events: none;
+    }
+
+    .visor-tarjeta:hover {
+      transform: scale(1.02);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .visor-tarjeta.visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .visor-header { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; }
+    .visor-z { font-size: 26px; font-weight: bold; color: #111; line-height: 1; }
+    .visor-valencias { font-size: 15px; font-weight: 600; color: #222; text-align: right; line-height: 1.1; }
+    .visor-body { text-align: left; margin-top: -6px; }
+    .visor-simbolo { font-size: 54px; font-weight: 800; color: #000; line-height: 0.9; margin-bottom: 2px; }
+    .visor-nombre { font-size: 22px; font-weight: 500; color: #111; line-height: 1.1; }
+    .visor-footer { display: flex; justify-content: flex-start; align-items: flex-end; width: 100%; }
+    .visor-masa { font-size: 18px; font-weight: 600; color: #222; }
+
+    /* Visor de Resultados del Examen */
+    .visor-resultados {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .visor-resultados.visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: none;
+    }
+
+    .res-titulo { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 12px; width: 100%; border-bottom: 2px solid #ecf0f1; padding-bottom: 5px;}
+    .res-stat { font-size: 13px; margin: 4px 0; color: #333; width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 600;}
+    .res-nota { font-size: 46px; font-weight: 900; margin-top: 12px; line-height: 1;}
+    .nota-aprobado { color: #27ae60; }
+    .nota-suspenso { color: #c0392b; }
+
+    /* --- ESTILOS DEL MODAL (Ficha ampliada) --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75); /* Oscurecemos el overlay para mayor inmersión con la imagen */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal-overlay.activo {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 90%;
+      max-width: 450px;
+      border-radius: 12px;
+      padding: 40px;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .btn-cerrar-modal {
+      position: absolute;
+      top: 15px; right: 20px;
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #95a5a6;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .btn-cerrar-modal:hover { color: #2c3e50; }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 38px;
+      color: #111;
+      font-weight: 500;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .modal-header sup { font-size: 20px; font-weight: normal; margin-left: 2px; }
+
+    .modal-grupo {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 5px; color: #7f8c8d; font-size: 15px;
+    }
+
+    .modal-grupo .punto-color { width: 14px; height: 14px; border-radius: 50%; }
+
+    .modal-bohr {
+      width: 160px; height: 160px;
+      margin: 40px auto;
+      display: flex; justify-content: center; align-items: center;
+    }
+
+    .modal-detalles p { margin: 15px 0; font-size: 15px; color: #333; line-height: 1.6; }
+    .modal-detalles .info-destacada { font-size: 16px; margin-bottom: 25px; }
+    .modal-detalles strong { color: #111; font-weight: 500; }
+
+    /* Estructura de celdas y rejilla */
+    .cabecera-columna {
+      display: flex; align-items: center; justify-content: center;
+      height: 30px; font-size: 12px; font-weight: bold; color: #333;
+      background-color: rgba(224, 224, 224, 0.9); border-radius: 4px; cursor: pointer; user-select: none;
+    }
+    .cabecera-columna.seleccionada { background-color: #2c3e50; color: white; }
+    .separador-bloque { grid-column: span 18; height: 20px; }
+
+    .celda {
+      width: 80px; height: 85px; border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 6px; display: flex; flex-direction: column;
+      justify-content: space-between; padding: 4px; box-sizing: border-box;
+      cursor: pointer; transition: transform 0.1s, opacity 0.3s ease, box-shadow 0.2s ease;
+    }
+    .celda:hover:not(.atenuada) { transform: scale(1.04); box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2; }
+
+    .alcalinos { background-color: var(--color-alcalinos); }
+    .alcalinoterreos { background-color: var(--color-alcalinoterreos); }
+    .transicion { background-color: var(--color-transicion); }
+    .lantanidos { background-color: var(--color-lantanidos); }
+    .actinidos { background-color: var(--color-actinidos); }
+    .otros-metales { background-color: var(--color-otros-metales); }
+    .metaloides { background-color: var(--color-metaloides); }
+    .no-metales { background-color: var(--color-no-metales); }
+    .halogenos { background-color: var(--color-halogenos); }
+    .gases-nobles { background-color: var(--color-gases-nobles); }
+
+    .celda.atenuada { opacity: 0.3; filter: grayscale(60%); pointer-events: none; }
+    .celda-vacia { border: none; background: transparent; }
+
+    .input-z, .input-simbolo, .input-nombre { border: 1px solid rgba(0,0,0,0.2); border-radius: 3px; background: rgba(255, 255, 255, 0.7); text-align: center; }
+    .input-z { width: 32px; font-size: 11px; font-weight: bold; padding: 2px; }
+    .input-simbolo { width: 92%; font-size: 16px; font-weight: bold; margin: 0 auto; padding: 2px 0; }
+    .input-nombre { width: 96%; font-size: 11px; margin: 0 auto; padding: 2px 0; }
+    input:disabled { background-color: rgba(245, 245, 245, 0.5); color: #333; border-color: transparent; pointer-events: none; }
+    .celda.correcto { background-color: var(--correct-color) !important; border-color: #2e7d32 !important; }
+    .celda.incorrecto { background-color: var(--incorrect-color) !important; border-color: #c62828 !important; }
+
+    #marcador { margin-top: 15px; font-size: 18px; font-weight: bold; color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;}
+  </style>
+</head>
+<body>
+
+  <h1>Tabla Periódica Interactiva</h1>
+
+  <div class="leyenda">
+    <label class="item-leyenda"><input type="checkbox" value="alcalinos" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-alcalinos)"></div> Alcalinos</label>
+    <label class="item-leyenda"><input type="checkbox" value="alcalinoterreos" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-alcalinoterreos)"></div> Alcalinotérreos</label>
+    <label class="item-leyenda"><input type="checkbox" value="transicion" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-transicion)"></div> Metales de transición</label>
+    <label class="item-leyenda"><input type="checkbox" value="otros-metales" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-otros-metales)"></div> Otros metales</label>
+    <label class="item-leyenda"><input type="checkbox" value="metaloides" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-metaloides)"></div> Metaloides</label>
+    <label class="item-leyenda"><input type="checkbox" value="no-metales" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-no-metales)"></div> No metales</label>
+    <label class="item-leyenda"><input type="checkbox" value="halogenos" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-halogenos)"></div> Halógenos</label>
+    <label class="item-leyenda"><input type="checkbox" value="gases-nobles" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-gases-nobles)"></div> Gases nobles</label>
+    <label class="item-leyenda"><input type="checkbox" value="lantanidos" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-lantanidos)"></div> Lantánidos</label>
+    <label class="item-leyenda"><input type="checkbox" value="actinidos" onchange="actualizarFiltros()"> <div class="muestra-color" style="background: var(--color-actinidos)"></div> Actínidos</label>
+  </div>
+
+  <div class="panel-botones">
+    <button onclick="cambiarModo('nombre')">Introducir nombre</button>
+    <button onclick="cambiarModo('simbolo')">Introducir símbolo</button>
+    <button onclick="cambiarModo('num')">Introducir nº atómico</button>
+    <button onclick="cambiarModo('simbolo-num')">Introducir símbolo y nº atómico</button>
+    <button class="btn-corregir" onclick="corregir()">Corregir</button>
+    <button class="btn-limpiar" onclick="limpiarTabla()">Limpiar</button>
+    <button class="btn-accion" onclick="mostrarTablaCompleta()">Mostrar tabla completa</button>
+  </div>
+
+  <div class="tabla-container">
+    <div id="grid-tabla" class="tabla-periodica"></div>
+
+    <!-- 1. Visor de Tarjeta (Información del elemento) -->
+    <div id="visor-tarjeta" class="visor-central visor-tarjeta">
+      <div class="visor-header">
+        <div id="v-z" class="visor-z"></div>
+        <div id="v-val" class="visor-valencias"></div>
+      </div>
+      <div class="visor-body">
+        <div id="v-simbolo" class="visor-simbolo"></div>
+        <div id="v-nombre" class="visor-nombre"></div>
+      </div>
+      <div class="visor-footer">
+        <div id="v-masa" class="visor-masa"></div>
+      </div>
+    </div>
+
+    <!-- 2. Visor de Resultados (Corrección) -->
+    <div id="visor-resultados" class="visor-central visor-resultados">
+      <div class="res-titulo">Resultados</div>
+      <div class="res-stat"><span>Seleccionados:</span> <strong id="r-total">0</strong></div>
+      <div class="res-stat"><span>Aciertos:</span> <strong id="r-correctos" style="color:#27ae60; font-size:16px;">0</strong></div>
+      <div class="res-stat"><span>Fallos:</span> <strong id="r-incorrectos" style="color:#c0392b; font-size:16px;">0</strong></div>
+      <div id="r-nota" class="res-nota">0.0</div>
+    </div>
+  </div>
+
+  <div id="marcador" style="display:none;"></div> <!-- Oculto por defecto hasta que tenga texto -->
+
+  <!-- ESTRUCTURA DEL MODAL (Ficha ampliada) -->
+  <div id="modal-detalle" class="modal-overlay" onclick="cerrarModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="btn-cerrar-modal" onclick="cerrarModal()">&times;</button>
+      
+      <div class="modal-header">
+        <h2 id="m-titulo">Hidrógeno (H)<sup>1</sup></h2>
+      </div>
+      <div class="modal-grupo">
+        <div id="m-color" class="punto-color"></div>
+        <span id="m-nombre-grupo">No metal reactivo</span>
+      </div>
+
+      <div class="modal-bohr">
+        <canvas id="canvas-bohr" width="160" height="160"></canvas>
+      </div>
+
+      <div class="modal-detalles">
+        <p id="m-desc" class="info-destacada"></p>
+        <p><strong>Símbolo:</strong> <span id="m-simbolo"></span></p>
+        <p><strong>Masa atómica:</strong> <span id="m-masa"></span></p>
+        <p><strong>Densidad (en estado líquido en el punto de fusión):</strong> <span id="m-densidad"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Dibuja el modelo orbital usando Canvas API.
+     * @param {Array} arrayElectrones - Ej: [2, 1] para Litio.
+     * @param {String} colorNucleo - El código hexadecimal del color.
+     */
+    function dibujarModeloBohr(arrayElectrones, colorNucleo) {
+      const canvas = document.getElementById('canvas-bohr');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 14, 0, 2 * Math.PI);
+      
+      const gradiente = ctx.createRadialGradient(centerX - 4, centerY - 4, 2, centerX, centerY, 14);
+      gradiente.addColorStop(0, '#ffffff');
+      gradiente.addColorStop(1, colorNucleo || '#e74c3c');
+      
+      ctx.fillStyle = gradiente;
+      ctx.fill();
+      
+      if (!arrayElectrones || !arrayElectrones.length) {
+        ctx.fillStyle = "#95a5a6";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Sin datos orbitales", centerX, centerY + 30);
+        return;
+      }
+
+      const separacionOrbitas = 18;
+      const radioBase = 28;
+
+      arrayElectrones.forEach((numElectrones, index) => {
+        const radioOrbita = radioBase + (index * separacionOrbitas);
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radioOrbita, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#bdc3c7';
+        ctx.setLineDash([3, 4]);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        for (let i = 0; i < numElectrones; i++) {
+          const angulo = (i * (Math.PI * 2)) / numElectrones;
+          const eX = centerX + radioOrbita * Math.cos(angulo);
+          const eY = centerY + radioOrbita * Math.sin(angulo);
+
+          ctx.beginPath();
+          ctx.arc(eX, eY, 3.5, 0, 2 * Math.PI);
+          ctx.fillStyle = '#2c3e50';
+          ctx.fill();
+        }
+      });
+      ctx.setLineDash([]);
+    }
+
+    // Datos Centrales
+    const elementosBD = [
+      { z: 1, s: "H", n: "Hidrógeno", m: "1.0080", val: "", f: 1, c: 1, g: "no-metales", desc: "El hidrógeno (símbolo H, número atómico 1) es el elemento más ligero de toda la tabla periódica. En su forma monatómica, resulta ser la sustancia química más abundante del universo, abarcando aproximadamente tres cuartas partes de la masa bariónica total.", densidad: 0.08988, electrones: [ 1 ] },
+      { z: 2, s: "He", n: "Helio", m: "4.0026", val: "", f: 1, c: 18, g: "gases-nobles", desc: "El helio, cuyo número atómico es 2 y su símbolo He, es un gas inerte, incoloro e inodoro. Lidera el grupo de los gases nobles y se distingue por poseer los puntos de fusión y ebullición más bajos entre todos los elementos químicos.", densidad: 0.1786, electrones: [ 2 ] },
+      { z: 3, s: "Li", n: "Litio", m: "6.9400", val: "", f: 2, c: 1, g: "alcalinos", desc: "El litio (Li, número atómico 3) es un metal alcalino de tono blanco plateado y muy blando. Bajo condiciones normales de presión y temperatura, destaca por ser el metal más ligero y el elemento en estado sólido de menor densidad.", densidad: 0.534, electrones: [ 2, 1 ] },
+      { z: 4, s: "Be", n: "Berilio", m: "9.0122", val: "", f: 2, c: 2, g: "alcalinoterreos", desc: "El berilio es un elemento divalente con símbolo Be y número atómico 4. Formado mediante nucleosíntesis estelar, es relativamente escaso en el universo y en la naturaleza solo se halla combinado químicamente en diversos minerales.", densidad: 1.85, electrones: [ 2, 2 ] },
+      { z: 5, s: "B", n: "Boro", m: "10.8100", val: "", f: 2, c: 13, g: "metaloides", desc: "El boro (símbolo B, número atómico 5) es un metaloide poco abundante en el sistema solar. No se forma por nucleosíntesis estelar, sino por procesos como la espalación de rayos cósmicos. En la Tierra, se concentra principalmente en compuestos solubles en agua conocidos como boratos.", densidad: 2.08, electrones: [ 2, 3 ] },
+      { z: 6, s: "C", n: "Carbono", m: "12.0110", val: "", f: 2, c: 14, g: "no-metales", desc: "El carbono (C, número atómico 6) es un no metal tetravalente, lo que significa que dispone de cuatro electrones para formar enlaces covalentes. Encabeza el grupo 14 de la tabla periódica.", densidad: 1.821, electrones: [ 2, 4 ] },
+      { z: 7, s: "N", n: "Nitrógeno", m: "14.0070", val: "", f: 2, c: 15, g: "no-metales", desc: "El nitrógeno es un gas diatómico incoloro e inodoro en condiciones estándar, con símbolo N y número atómico 7. Es un elemento muy común, siendo aproximadamente el séptimo más abundante en nuestro sistema solar y en la Vía Láctea.", densidad: 1.251, electrones: [ 2, 5 ] },
+      { z: 8, s: "O", n: "Oxígeno", m: "15.9990", val: "", f: 2, c: 16, g: "no-metales", desc: "El oxígeno (O, número atómico 8) es un no metal muy reactivo y un poderoso agente oxidante perteneciente al grupo de los calcógenos. Por masa, es el tercer elemento más abundante del universo, solo por detrás del hidrógeno y el helio.", densidad: 1.429, electrones: [ 2, 6 ] },
+      { z: 9, s: "F", n: "Flúor", m: "18.9984", val: "", f: 2, c: 17, g: "no-metales", desc: "El flúor (F, número atómico 9) es un gas diatómico de tono amarillo pálido y alta toxicidad. Como el elemento más electronegativo de todos, es extremadamente reactivo y forma compuestos con casi la totalidad del resto de elementos.", densidad: 1.696, electrones: [ 2, 7 ] },
+      { z: 10, s: "Ne", n: "Neón", m: "20.1798", val: "", f: 2, c: 18, g: "gases-nobles", desc: "El neón (Ne, número atómico 10) forma parte del grupo de los gases nobles. En condiciones normales es un gas monatómico, incoloro e inerte, cuya densidad equivale a unos dos tercios la del aire.", densidad: 0.9002, electrones: [ 2, 8 ] },
+      { z: 11, s: "Na", n: "Sodio", m: "22.9898", val: "", f: 3, c: 1, g: "alcalinos", desc: "El sodio (símbolo Na, número atómico 11) es un metal alcalino plateado, blando y sumamente reactivo. Al igual que otros miembros de su grupo, posee un único electrón en su capa exterior que cede con facilidad para generar un catión.", densidad: 0.968, electrones: [ 2, 8, 1 ] },
+      { z: 12, s: "Mg", n: "Magnesio", m: "24.3050", val: "", f: 3, c: 2, g: "alcalinoterreos", desc: "El magnesio (Mg, número atómico 12) es un sólido metálico de color gris brillante. Pertenece a los metales alcalinotérreos y es el noveno elemento químico con mayor abundancia en el universo.", densidad: 1.738, electrones: [ 2, 8, 2 ] },
+      { z: 13, s: "Al", n: "Aluminio", m: "26.9815", val: "", f: 3, c: 13, g: "transicion", desc: "El aluminio (Al, número atómico 13) es un metal no magnético, blando y dúctil de color blanco plateado. Destaca por ser el metal más común y el tercer elemento más abundante en la corteza terrestre.", densidad: 2.7, electrones: [ 2, 8, 3 ] },
+      { z: 14, s: "Si", n: "Silicio", m: "28.0850", val: "", f: 3, c: 14, g: "metaloides", desc: "El silicio (Si, número atómico 14) es un metaloide tetravalente y sólido que muestra mayor reactividad que el germanio, el elemento situado justo debajo de él en la tabla periódica.", densidad: 2.329, electrones: [ 2, 8, 4 ] },
+      { z: 15, s: "P", n: "Fósforo", m: "30.9738", val: "", f: 3, c: 15, g: "no-metales", desc: "El fósforo (P, número atómico 15) se presenta principalmente en sus variantes roja y blanca. Debido a su elevada reactividad química, en la Tierra siempre se encuentra combinado en minerales fosfatados y nunca en estado libre.", densidad: 1.823, electrones: [ 2, 8, 5 ] },
+      { z: 16, s: "S", n: "Azufre", m: "32.0600", val: "", f: 3, c: 16, g: "no-metales", desc: "El azufre (S, número atómico 16) es un no metal multivalente de gran abundancia. En su estado normal, sus átomos se agrupan formando moléculas cíclicas de ocho átomos conocidas como S8.", densidad: 2.07, electrones: [ 2, 8, 6 ] },
+      { z: 17, s: "Cl", n: "Cloro", m: "35.4500", val: "", f: 3, c: 17, g: "no-metales", desc: "El cloro (símbolo Cl, número atómico 17) pertenece al grupo de los halógenos, siendo el segundo más ligero después del flúor. Posee una masa atómica relativa cercana a 35,5.", densidad: 3.2, electrones: [ 2, 8, 7 ] },
+      { z: 18, s: "Ar", n: "Argón", m: "39.9481", val: "", f: 3, c: 18, g: "gases-nobles", desc: "El argón (Ar, número atómico 18) es un gas noble que constituye el tercer gas más abundante en nuestra atmósfera, superando de forma considerable al dióxido de carbono y otros gases no condensantes.", densidad: 1.784, electrones: [ 2, 8, 8 ] },
+      { z: 19, s: "K", n: "Potasio", m: "39.0983", val: "", f: 4, c: 1, g: "alcalinos", desc: "El potasio (K, número atómico 19) es un metal alcalino que fue aislado por vez primera a partir de cenizas de plantas. Cede fácilmente su electrón de valencia para unirse a aniones y crear diversas sales.", densidad: 0.862, electrones: [ 2, 8, 8, 1 ] },
+      { z: 20, s: "Ca", n: "Calcio", m: "40.0784", val: "", f: 4, c: 2, g: "alcalinoterreos", desc: "El calcio (Ca, número atómico 20) es un metal alcalinotérreo blando y grisáceo. Se clasifica como el quinto elemento más abundante en la corteza de la Tierra, y su ion es esencial y muy común en el agua de mar.", densidad: 1.55, electrones: [ 2, 8, 8, 2 ] },
+      { z: 21, s: "Sc", n: "Escandio", m: "44.9559", val: "", f: 4, c: 3, g: "transicion", desc: "El escandio (Sc, número atómico 21) es un metal de transición de color blanco plateado. A menudo se agrupa junto con los lantánidos y el itrio dentro de la categoría de elementos de tierras raras.", densidad: 2.985, electrones: [ 2, 8, 9, 2 ] },
+      { z: 22, s: "Ti", n: "Titanio", m: "47.8671", val: "", f: 4, c: 4, g: "transicion", desc: "El titanio (Ti, número atómico 22) es un metal de transición conocido por su color plateado, baja densidad y excepcional resistencia mecánica. Posee una gran tolerancia a la corrosión en agua de mar y cloro.", densidad: 4.506, electrones: [ 2, 8, 10, 2 ] },
+      { z: 23, s: "V", n: "Vanadio", m: "50.9415", val: "", f: 4, c: 5, g: "transicion", desc: "El vanadio (V, número atómico 23) es un metal de transición maleable, duro y de tono gris plateado. En la naturaleza siempre aparece formando compuestos, aunque artificialmente aislado desarrolla una capa de óxido que lo estabiliza.", densidad: 6, electrones: [ 2, 8, 11, 2 ] },
+      { z: 24, s: "Cr", n: "Cromo", m: "51.9962", val: "", f: 4, c: 6, g: "transicion", desc: "El cromo (Cr, número atómico 24) es el primer elemento del grupo 6. Destaca como un metal gris metálico, duro y brillante, caracterizado por su alto punto de fusión y su resistencia a perder brillo.", densidad: 7.19, electrones: [ 2, 8, 13, 1 ] },
+      { z: 25, s: "Mn", n: "Manganeso", m: "54.9380", val: "", f: 4, c: 7, g: "transicion", desc: "El manganeso (Mn, número atómico 25) no aparece libre en la naturaleza, encontrándose habitualmente junto al hierro en varios minerales. Es fundamental en la industria metalúrgica, especialmente en la fabricación de aceros inoxidables.", densidad: 7.21, electrones: [ 2, 8, 13, 2 ] },
+      { z: 26, s: "Fe", n: "Hierro", m: "55.8452", val: "", f: 4, c: 8, g: "transicion", desc: "El hierro (Fe, número atómico 26) es el elemento más abundante en la masa de nuestro planeta, componiendo gran parte del núcleo terrestre. Pertenece a la primera serie de metales de transición.", densidad: 7.874, electrones: [ 2, 8, 14, 2 ] },
+      { z: 27, s: "Co", n: "Cobalto", m: "58.9332", val: "", f: 4, c: 9, g: "transicion", desc: "El cobalto (Co, número atómico 27) es un metal de color gris plateado, duro y brillante. Salvo en pequeñas trazas de hierro meteórico, en la corteza terrestre solo se encuentra formando compuestos químicos.", densidad: 8.9, electrones: [ 2, 8, 15, 2 ] },
+      { z: 28, s: "Ni", n: "Níquel", m: "58.6934", val: "", f: 4, c: 10, g: "transicion", desc: "El níquel (Ni, número atómico 28) es un metal de transición dúctil y resistente. Físicamente presenta un aspecto blanco plateado lustroso con un ligerísimo tono dorado.", densidad: 8.908, electrones: [ 2, 8, 16, 2 ] },
+      { z: 29, s: "Cu", n: "Cobre", m: "63.5463", val: "", f: 4, c: 11, g: "transicion", desc: "El cobre (Cu, número atómico 29) es un metal muy dúctil, maleable y blando, famoso por su excelente conductividad eléctrica y térmica. Su superficie pura exhibe un tono rojizo anaranjado inconfundible.", densidad: 8.96, electrones: [ 2, 8, 18, 1 ] },
+      { z: 30, s: "Zn", n: "Zinc", m: "65.3820", val: "", f: 4, c: 12, g: "transicion", desc: "El zinc (Zn, número atómico 30) es el primer elemento del grupo 12 de la tabla periódica. Guarda ciertas semejanzas químicas con el magnesio, especialmente en el tamaño de su ion y su estado de oxidación +2 habitual.", densidad: 7.14, electrones: [ 2, 8, 18, 2 ] },
+      { z: 31, s: "Ga", n: "Galio", m: "69.7231", val: "", f: 4, c: 13, g: "transicion", desc: "El galio (Ga, número atómico 31) es un metal plateado y blando que no se halla en estado elemental en la naturaleza, sino en minerales de bauxita o zinc. A temperaturas cercanas a los 30 °C, puede volverse líquido.", densidad: 5.91, electrones: [ 2, 8, 18, 3 ] },
+      { z: 32, s: "Ge", n: "Germanio", m: "72.6308", val: "", f: 4, c: 14, g: "metaloides", desc: "El germanio (Ge, número atómico 32) es un metaloide brillante, duro y grisáceo. Pertenece al grupo del carbono y se comporta como un semiconductor, siendo su apariencia similar a la del silicio puro.", densidad: 5.323, electrones: [ 2, 8, 18, 4 ] },
+      { z: 33, s: "As", n: "Arsénico", m: "74.9216", val: "", f: 4, c: 15, g: "metaloides", desc: "El arsénico (As, número atómico 33) es un metaloide que puede encontrarse en su forma pura, aunque es más habitual hallarlo en varios minerales combinado con otros metales y azufre.", densidad: 5.727, electrones: [ 2, 8, 18, 5 ] },
+      { z: 34, s: "Se", n: "Selenio", m: "78.9718", val: "", f: 4, c: 16, g: "no-metales", desc: "El selenio (Se, número atómico 34) es un no metal cuyas características se encuentran a medio camino entre las del telurio y el azufre. Rara vez se presenta en estado puro en el entorno natural.", densidad: 4.81, electrones: [ 2, 8, 18, 6 ] },
+      { z: 35, s: "Br", n: "Bromo", m: "79.9040", val: "", f: 4, c: 17, g: "no-metales", desc: "El bromo (Br, número atómico 35) es un elemento halógeno que recibe su nombre del griego antiguo por su fuerte olor. Fue descubierto y aislado por separado por dos químicos en la década de 1820.", densidad: 3.1028, electrones: [ 2, 8, 18, 7 ] },
+      { z: 36, s: "Kr", n: "Criptón", m: "83.7982", val: "", f: 4, c: 18, g: "gases-nobles", desc: "El criptón (Kr, número atómico 36) es un gas noble inodoro, incoloro e insípido. Se encuentra en pequeñísimas cantidades en la atmósfera terrestre y tiene un uso destacado en iluminación fluorescente.", densidad: 3.749, electrones: [ 2, 8, 18, 8 ] },
+      { z: 37, s: "Rb", n: "Rubidio", m: "85.4678", val: "", f: 5, c: 1, g: "alcalinos", desc: "El rubidio (Rb, número atómico 37) es un metal alcalino blanco plateado y blando. Se caracteriza por ser altamente reactivo y por oxidarse de manera extremadamente rápida en presencia de aire.", densidad: 1.532, electrones: [ 2, 8, 18, 8, 1 ] },
+      { z: 38, s: "Sr", n: "Estroncio", m: "87.6210", val: "", f: 5, c: 2, g: "alcalinoterreos", desc: "El estroncio (Sr, número atómico 38) es un metal alcalinotérreo químicamente muy reactivo. Exhibe un tono plateado blanquecino que adquiere un matiz amarillento al entrar en contacto con el aire.", densidad: 2.64, electrones: [ 2, 8, 18, 8, 2 ] },
+      { z: 39, s: "Y", n: "Itrio", m: "88.9058", val: "", f: 5, c: 3, g: "transicion", desc: "El itrio (Y, número atómico 39) es un metal de transición similar químicamente a los lantánidos, clasificándose a menudo como una tierra rara. Nunca se halla libre en la naturaleza.", densidad: 4.472, electrones: [ 2, 8, 18, 9, 2 ] },
+      { z: 40, s: "Zr", n: "Circonio", m: "91.2242", val: "", f: 5, c: 4, g: "transicion", desc: "El circonio (Zr, número atómico 40) obtiene su nombre de su principal mineral fuente, el circón. Etimológicamente, proviene del persa que significa 'color oro'.", densidad: 6.52, electrones: [ 2, 8, 18, 10, 2 ] },
+      { z: 41, s: "Nb", n: "Niobio", m: "92.9064", val: "", f: 5, c: 5, g: "transicion", desc: "El niobio (Nb, número atómico 41), conocido antes como columbio, es un metal de transición gris, blando y dúctil. Suele obtenerse de minerales como el pirocloro o la columbita y debe su nombre a la mitología griega.", densidad: 8.57, electrones: [ 2, 8, 18, 12, 1 ] },
+      { z: 42, s: "Mo", n: "Molibdeno", m: "95.9510", val: "", f: 5, c: 6, g: "transicion", desc: "El molibdeno (Mo, número atómico 42) deriva su nombre de la palabra griega para plomo, ya que sus menas solían confundirse con las de aquel. Fue identificado como un elemento nuevo por Carl Wilhelm Scheele en 1778.", densidad: 10.28, electrones: [ 2, 8, 18, 13, 1 ] },
+      { z: 43, s: "Tc", n: "Tecnecio", m: "98.0000", val: "", f: 5, c: 7, g: "transicion", desc: "El tecnecio (Tc, número atómico 43) es el elemento químico más liviano que carece por completo de isótopos estables, por lo que todos son radiactivos. Su obtención es casi totalmente sintética.", densidad: 11, electrones: [ 2, 8, 18, 13, 2 ] },
+      { z: 44, s: "Ru", n: "Rutenio", m: "101.0720", val: "", f: 5, c: 8, g: "transicion", desc: "El rutenio (Ru, número atómico 44) es un escaso metal de transición perteneciente al grupo del platino. Comparte con los demás miembros de este grupo su marcada inercia frente a numerosas sustancias químicas.", densidad: 12.45, electrones: [ 2, 8, 18, 15, 1 ] },
+      { z: 45, s: "Rh", n: "Rodio", m: "102.9055", val: "", f: 5, c: 9, g: "transicion", desc: "El rodio (Rh, número atómico 45) forma parte del grupo del platino. Es un metal de transición muy poco abundante, de color blanco plateado, gran dureza y notablemente inerte a nivel químico.", densidad: 12.41, electrones: [ 2, 8, 18, 16, 1 ] },
+      { z: 46, s: "Pd", n: "Paladio", m: "106.4210", val: "", f: 5, c: 10, g: "transicion", desc: "El paladio (Pd, número atómico 46) es un brillante metal blanco plateado descubierto en 1803 por William Hyde Wollaston, quien le otorgó ese nombre basándose en el asteroide Palas.", densidad: 12.023, electrones: [ 2, 8, 18, 18 ] },
+      { z: 47, s: "Ag", n: "Plata", m: "107.8682", val: "", f: 5, c: 11, g: "transicion", desc: "La plata (Ag, número atómico 47) es un metal de transición blanco y brillante que ostenta los récords de conductividad térmica, eléctrica y reflexión lumínica entre todos los metales. Se presenta tanto pura como en aleaciones.", densidad: 10.49, electrones: [ 2, 8, 18, 18, 1 ] },
+      { z: 48, s: "Cd", n: "Cadmio", m: "112.4144", val: "", f: 5, c: 12, g: "transicion", desc: "El cadmio (Cd, número atómico 48) es un metal blando de tono blanco azulado. Posee similitudes químicas con el zinc en su estado de oxidación y con el mercurio en cuanto a su bajo punto de fusión.", densidad: 8.65, electrones: [ 2, 8, 18, 18, 2 ] },
+      { z: 49, s: "In", n: "Indio", m: "114.8181", val: "", f: 5, c: 13, g: "transicion", desc: "El indio (In, número atómico 49) es un elemento metálico post-transicional raro en la corteza de la Tierra. Resulta ser extremadamente maleable y blando, con un punto de fusión superior al del sodio pero inferior al del estaño.", densidad: 7.31, electrones: [ 2, 8, 18, 18, 3 ] },
+      { z: 50, s: "Sn", n: "Estaño", m: "118.7107", val: "", f: 5, c: 14, g: "transicion", desc: "El estaño (Sn, número atómico 50) es un metal del grupo principal 14. Comparte propiedades químicas tanto con el germanio como con el plomo, exhibiendo dos estados de oxidación frecuentes, +2 y +4.", densidad: 7.365, electrones: [ 2, 8, 18, 18, 4 ] },
+      { z: 51, s: "Sb", n: "Antimonio", m: "121.7601", val: "", f: 5, c: 15, g: "metaloides", desc: "El antimonio (Sb, número atómico 51) es un metaloide lustroso y gris que se extrae comúnmente del mineral estibina. Empleado en cosmética desde tiempos antiguos, llegó a confundirse con el plomo en sus primeras descripciones.", densidad: 6.697, electrones: [ 2, 8, 18, 18, 5 ] },
+      { z: 52, s: "Te", n: "Telurio", m: "127.6030", val: "", f: 5, c: 16, g: "metaloides", desc: "El telurio (Te, número atómico 52) es un metaloide raro, frágil y de tono plateado blanquecino. Aunque resulta ligeramente tóxico, tiene importantes vínculos químicos con el azufre y el selenio.", densidad: 6.24, electrones: [ 2, 8, 18, 18, 6 ] },
+      { z: 53, s: "I", n: "Yodo", m: "126.9045", val: "", f: 5, c: 17, g: "no-metales", desc: "El yodo (I, número atómico 53) deriva su nombre de la palabra griega para el color violeta, rasgo distintivo de su vapor. Es un elemento vital a nivel nutricional y con aplicaciones industriales en polímeros.", densidad: 4.933, electrones: [ 2, 8, 18, 18, 7 ] },
+      { z: 54, s: "Xe", n: "Xenón", m: "131.2936", val: "", f: 5, c: 18, g: "gases-nobles", desc: "El xenón (Xe, número atómico 54) es un denso gas noble, incoloro e inodoro, presente en pequeñas trazas atmosféricas. Aunque es poco reactivo, fue el primer gas noble del que se lograron sintetizar compuestos.", densidad: 5.894, electrones: [ 2, 8, 18, 18, 8 ] },
+      { z: 55, s: "Cs", n: "Cesio", m: "132.9055", val: "", f: 6, c: 1, g: "alcalinos", desc: "El cesio (Cs, número atómico 55) es un blando metal alcalino de tono dorado plateado. Posee la peculiaridad de tener un punto de fusión cercano a los 28 °C, por lo que puede presentarse líquido casi a temperatura ambiente.", densidad: 1.93, electrones: [ 2, 8, 18, 18, 8, 1 ] },
+      { z: 56, s: "Ba", n: "Bario", m: "137.3277", val: "", f: 6, c: 2, g: "alcalinoterreos", desc: "El bario (Ba, número atómico 56) es el quinto metal del grupo de los alcalinotérreos. Se trata de un elemento blando y plateado que, dada su elevada reactividad, no existe de forma aislada en la naturaleza.", densidad: 3.51, electrones: [ 2, 8, 18, 18, 8, 2 ] },
+      { z: 57, s: "La", n: "Lantano", m: "138.9055", val: "", f: 6, c: 3, g: "lantanidos", desc: "El lantano (La, número atómico 57) es un dúctil metal blanco plateado que se deslustra rápidamente al aire. Da su nombre a la extensa serie de los lantánidos, y suele considerarse el primer metal de transición del periodo 6.", densidad: 6.162, electrones: [ 2, 8, 18, 18, 9, 2 ] },
+      
+      /* --- LANTÁNIDOS SEPARADOS VISUALMENTE (f: 9) --- */
+      { z: 58, s: "Ce", n: "Cerio", m: "140.1161", val: "", f: 9, c: 4, g: "lantanidos", desc: "El cerio (Ce, número atómico 58) es un metal blando y dúctil que se oxida con gran facilidad en contacto con el aire. Fue nombrado en honor a Ceres, el planeta enano (y diosa romana).", densidad: 6.77, electrones: [ 2, 8, 18, 19, 9, 2 ] },
+      { z: 59, s: "Pr", n: "Praseodimio", m: "140.9077", val: "", f: 9, c: 5, g: "lantanidos", desc: "El praseodimio (Pr, número atómico 59) forma parte de los lantánidos como un metal blando, dúctil y plateado. Posee propiedades ópticas, químicas, eléctricas y magnéticas muy valoradas industrialmente.", densidad: 6.77, electrones: [ 2, 8, 18, 21, 8, 2 ] },
+      { z: 60, s: "Nd", n: "Neodimio", m: "144.2423", val: "", f: 9, c: 6, g: "lantanidos", desc: "El neodimio (Nd, número atómico 60) es un metal plateado y blando, famoso por empañarse al contacto con el aire. Fue identificado en 1885 por el químico austriaco Carl Auer von Welsbach.", densidad: 7.01, electrones: [ 2, 8, 18, 22, 8, 2 ] },
+      { z: 61, s: "Pm", n: "Prometio", m: "145.0000", val: "", f: 9, c: 7, g: "lantanidos", desc: "El prometio (Pm, número atómico 61) es un lantánido muy peculiar, pues todos sus isótopos son radiactivos, algo raro para un elemento relativamente ligero. Químicamente, forma sales de manera similar al resto de su grupo.", densidad: 7.26, electrones: [ 2, 8, 18, 23, 8, 2 ] },
+      { z: 62, s: "Sm", n: "Samario", m: "150.3620", val: "", f: 9, c: 8, g: "lantanidos", desc: "El samario (Sm, número atómico 62) es un metal de dureza media y tono plateado que se oxida fácilmente. Como un lantánido típico, su estado de oxidación más frecuente es el +3.", densidad: 7.52, electrones: [ 2, 8, 18, 24, 8, 2 ] },
+      { z: 63, s: "Eu", n: "Europio", m: "151.9641", val: "", f: 9, c: 9, g: "lantanidos", desc: "El europio (Eu, número atómico 63) es un metal moderadamente duro de color plateado que se oxida rápidamente con el agua o el aire. Aislado en 1901, recibe su nombre del continente europeo.", densidad: 5.264, electrones: [ 2, 8, 18, 25, 8, 2 ] },
+      { z: 64, s: "Gd", n: "Gadolinio", m: "157.2530", val: "", f: 9, c: 10, g: "lantanidos", desc: "El gadolinio (Gd, número atómico 64) es un elemento de tierras raras maleable y dúctil. En la Tierra solo aparece combinado en forma de sales, presentando un aspecto natural blanco plateado cuando es purificado.", densidad: 7.9, electrones: [ 2, 8, 18, 25, 9, 2 ] },
+      { z: 65, s: "Tb", n: "Terbio", m: "158.9254", val: "", f: 9, c: 11, g: "lantanidos", desc: "El terbio (Tb, número atómico 65) es un metal plateado de tierras raras tan blando que puede cortarse con suma facilidad. No se halla libre en la naturaleza, sino oculto en múltiples minerales complejos.", densidad: 8.23, electrones: [ 2, 8, 18, 27, 8, 2 ] },
+      { z: 66, s: "Dy", n: "Disprosio", m: "162.5001", val: "", f: 9, c: 12, g: "lantanidos", desc: "El disprosio (Dy, número atómico 66) es un elemento de tierras raras caracterizado por un lustroso brillo plateado. Aunque no existe en forma libre, se encuentra presente en minerales como el xenotima.", densidad: 8.54, electrones: [ 2, 8, 18, 28, 8, 2 ] },
+      { z: 67, s: "Ho", n: "Holmio", m: "164.9303", val: "", f: 9, c: 13, g: "lantanidos", desc: "El holmio (Ho, número atómico 67) es un elemento de tierras raras dentro de los lantánidos. Su descubrimiento es atribuido al químico sueco Per Theodor Cleve.", densidad: 8.79, electrones: [ 2, 8, 18, 29, 8, 2 ] },
+      { z: 68, s: "Er", n: "Erbio", m: "167.2593", val: "", f: 9, c: 14, g: "lantanidos", desc: "El erbio (Er, número atómico 68) es un metal sólido blanco plateado en su estado aislado. Pertenece a las tierras raras y suele encontrarse químicamente ligado a otros minerales escasos en la naturaleza.", densidad: 9.066, electrones: [ 2, 8, 18, 30, 8, 2 ] },
+      { z: 69, s: "Tm", n: "Tulio", m: "168.9342", val: "", f: 9, c: 15, g: "lantanidos", desc: "El tulio (Tm, número atómico 69) es el decimotercer elemento de la serie de los lantánidos. Presenta con frecuencia un estado de oxidación +3 en sus diferentes compuestos y haluros.", densidad: 9.32, electrones: [ 2, 8, 18, 31, 8, 2 ] },
+      { z: 70, s: "Yb", n: "Iterbio", m: "173.0451", val: "", f: 9, c: 16, g: "lantanidos", desc: "El iterbio (Yb, número atómico 70) es el penúltimo lantánido de la tabla. Aunque goza de una estabilidad relativa en estado +2, predomina fuertemente su estado de oxidación +3 en óxidos y otras combinaciones.", densidad: 6.9, electrones: [ 2, 8, 18, 32, 8, 2 ] },
+      { z: 71, s: "Lu", n: "Lutecio", m: "174.9668", val: "", f: 9, c: 17, g: "lantanidos", desc: "El lutecio (Lu, número atómico 71) es un metal blanco plateado resistente a la corrosión si se halla en un ambiente seco. Suele ser clasificado como el último de los lantánidos o el primero de los metales de transición del periodo 6.", densidad: 9.841, electrones: [ 2, 8, 18, 32, 9, 2 ] },
+      
+      /* --- CONTINÚA EL PERIODO 6 VISUAL (f: 6) --- */
+      { z: 72, s: "Hf", n: "Hafnio", m: "178.4920", val: "", f: 6, c: 4, g: "transicion", desc: "El hafnio (Hf, número atómico 72) es un lustroso y grisáceo metal de transición tetravalente. Muy afín al circonio, su existencia fue predicha en el siglo XIX, pero no logró identificarse hasta el año 1923.", densidad: 13.31, electrones: [ 2, 8, 18, 32, 10, 2 ] },
+      { z: 73, s: "Ta", n: "Tántalo", m: "180.9479", val: "", f: 6, c: 5, g: "transicion", desc: "El tántalo (Ta, número atómico 73) es un duro y escaso metal de transición de color gris azulado. Bautizado en honor al personaje mitológico griego Tántalo, es muy valorado por su extrema resistencia corrosiva.", densidad: 16.69, electrones: [ 2, 8, 18, 32, 11, 2 ] },
+      { z: 74, s: "W", n: "Wolframio", m: "183.8410", val: "", f: 6, c: 6, g: "transicion", desc: "El wolframio o tungsteno (W, número atómico 74) deriva su nombre internacional de vocablos suecos que significan 'piedra pesada'. Es un metal de transición extremadamente denso e importante en múltiples aleaciones.", densidad: 19.25, electrones: [ 2, 8, 18, 32, 12, 2 ] },
+      { z: 75, s: "Re", n: "Renio", m: "186.2071", val: "", f: 6, c: 7, g: "transicion", desc: "El renio (Re, número atómico 75) es uno de los elementos más escasos presentes en la corteza terrestre. Se trata de un metal de transición del grupo 7, blanco plateado y de elevado peso.", densidad: 21.02, electrones: [ 2, 8, 18, 32, 13, 2 ] },
+      { z: 76, s: "Os", n: "Osmio", m: "190.2330", val: "", f: 6, c: 8, g: "transicion", desc: "El osmio (Os, número atómico 76) es un elemento de la familia del platino, sumamente denso (el mayor entre todos los naturales), duro y quebradizo, con una característica coloración blanco azulada.", densidad: 22.59, electrones: [ 2, 8, 18, 32, 14, 2 ] },
+      { z: 77, s: "Ir", n: "Iridio", m: "192.2173", val: "", f: 6, c: 9, g: "transicion", desc: "El iridio (Ir, número atómico 77) es el metal con mayor resistencia a la corrosión y se cuenta entre los elementos más densos descubiertos. Pertenece al grupo del platino y presenta un carácter duro y frágil.", densidad: 22.56, electrones: [ 2, 8, 18, 32, 15, 2 ] },
+      { z: 78, s: "Pt", n: "Platino", m: "195.0849", val: "", f: 6, c: 10, g: "transicion", desc: "El platino (Pt, número atómico 78) es un metal precioso, denso, maleable y de color grisáceo blanquecino. Etimológicamente, su nombre procede del español como diminutivo de 'plata'.", densidad: 21.45, electrones: [ 2, 8, 18, 32, 17, 1 ] },
+      { z: 79, s: "Au", n: "Oro", m: "196.9666", val: "", f: 6, c: 11, g: "transicion", desc: "El oro (Au, número atómico 79) es un metal de transición excepcionalmente maleable y denso. En su forma de mayor pureza exhibe un brillante y distintivo color amarillo ligeramente rojizo.", densidad: 19.3, electrones: [ 2, 8, 18, 32, 18, 1 ] },
+      { z: 80, s: "Hg", n: "Mercurio", m: "200.5923", val: "", f: 6, c: 12, g: "transicion", desc: "El mercurio (Hg, número atómico 80), pesado y plateado, posee la rara característica de mantenerse en estado líquido bajo condiciones estándar de temperatura y presión ambientales.", densidad: 13.534, electrones: [ 2, 8, 18, 32, 18, 2 ] },
+      { z: 81, s: "Tl", n: "Talio", m: "204.3800", val: "", f: 6, c: 13, g: "transicion", desc: "El talio (Tl, número atómico 81) es un metal post-transicional gris y blando que no se encuentra puro en la naturaleza. Cuando se aísla recuerda al estaño, pero se decolora al instante en presencia de aire.", densidad: 11.85, electrones: [ 2, 8, 18, 32, 18, 3 ] },
+      { z: 82, s: "Pb", n: "Plomo", m: "207.2100", val: "", f: 6, c: 14, g: "transicion", desc: "El plomo (Pb, número atómico 82) es un metal pesado y maleable del grupo del carbono. Presenta un tono blanco azulado recién cortado que se deslustra rápidamente a un gris mate en contacto con el aire.", densidad: 11.34, electrones: [ 2, 8, 18, 32, 18, 4 ] },
+      { z: 83, s: "Bi", n: "Bismuto", m: "208.9804", val: "", f: 6, c: 15, g: "transicion", desc: "El bismuto (Bi, número atómico 83) es un elemento pentavalente que comparte grandes afinidades químicas con el antimonio y el arsénico. En la naturaleza puede hallarse en su estado libre o como sulfuros.", densidad: 9.78, electrones: [ 2, 8, 18, 32, 18, 5 ] },
+      { z: 84, s: "Po", n: "Polonio", m: "209.0000", val: "", f: 6, c: 16, g: "transicion", desc: "El polonio (Po, número atómico 84) es un elemento extremadamente radiactivo y raro. Descubierto por los Curie a finales del siglo XIX, carece de isótopos estables y posee limitados usos comerciales.", densidad: 9.196, electrones: [ 2, 8, 18, 32, 18, 6 ] },
+      { z: 85, s: "At", n: "Astato", m: "210.0000", val: "", f: 6, c: 17, g: "metaloides", desc: "El astato (At, número atómico 85) es un elemento de radiactividad intensa y gran escasez en la Tierra. Su origen está ligado a la descomposición de elementos mayores, con isótopos de vida media muy corta.", densidad: 6.35, electrones: [ 2, 8, 18, 32, 18, 7 ] },
+      { z: 86, s: "Rn", n: "Radón", m: "222.0000", val: "", f: 6, c: 18, g: "gases-nobles", desc: "El radón (Rn, número atómico 86) es un gas noble sin color, sabor ni olor, pero de naturaleza radiactiva. Se genera principalmente por la desintegración del radio natural.", densidad: 9.73, electrones: [ 2, 8, 18, 32, 18, 8 ] },
+      { z: 87, s: "Fr", n: "Francio", m: "223.0000", val: "", f: 7, c: 1, g: "alcalinos", desc: "El francio (Fr, número atómico 87) es el metal alcalino más pesado descubierto. Destaca por ser sumamente radiactivo y el segundo menos electronegativo, decayendo rápidamente hacia otros elementos más estables.", densidad: 1.87, electrones: [ 2, 8, 18, 32, 18, 8, 1 ] },
+      { z: 88, s: "Ra", n: "Radio", m: "226.0000", val: "", f: 7, c: 2, g: "alcalinoterreos", desc: "El radio (Ra, número atómico 88) es un alcalinotérreo fuertemente radiactivo. En su forma pura carece de color, pero al interactuar con el nitrógeno del aire desarrolla enseguida una capa oscura.", densidad: 5.5, electrones: [ 2, 8, 18, 32, 18, 8, 2 ] },
+      { z: 89, s: "Ac", n: "Actinio", m: "227.0000", val: "", f: 7, c: 3, g: "actinidos", desc: "El actinio (Ac, número atómico 89) fue aislado en el año 1902, convirtiéndose en el primer elemento radiactivo no primordial en ser purificado, pese a que otros se habían observado antes.", densidad: 10, electrones: [ 2, 8, 18, 32, 18, 9, 2 ] },
+      
+      /* --- ACTÍNIDOS SEPARADOS VISUALMENTE (f: 10) --- */
+      { z: 90, s: "Th", n: "Torio", m: "232.0377", val: "", f: 10, c: 4, g: "actinidos", desc: "El torio (Th, número atómico 90) es un actínido radiactivo que se halla en considerables cantidades en la naturaleza. Bautizado en honor al dios Thor, es uno de los pocos elementos radiactivos primordiales.", densidad: 11.724, electrones: [ 2, 8, 18, 32, 18, 10, 2 ] },
+      { z: 91, s: "Pa", n: "Protactinio", m: "231.0359", val: "", f: 10, c: 5, g: "actinidos", desc: "El protactinio (Pa, número atómico 91) es un denso elemento metálico gris plateado. Es altamente reactivo frente a vapores de agua, ácidos y oxígeno, presentando un estado de oxidación predominante de +5.", densidad: 15.37, electrones: [ 2, 8, 18, 32, 20, 9, 2 ] },
+      { z: 92, s: "U", n: "Uranio", m: "238.0289", val: "", f: 10, c: 6, g: "actinidos", desc: "El uranio (U, número atómico 92) es un elemento actínido de color blanquecino plateado. Sus átomos albergan 92 protones y otros tantos electrones, siendo seis de estos últimos electrones de valencia.", densidad: 19.1, electrones: [ 2, 8, 18, 32, 21, 9, 2 ] },
+      { z: 93, s: "Np", n: "Neptunio", m: "237.0000", val: "", f: 10, c: 7, g: "actinidos", desc: "El neptunio (Np, número atómico 93) es el primer elemento transuránico de la tabla. Su nombre sigue la misma pauta astronómica que su vecino uranio, homenajeando en este caso al planeta Neptuno.", densidad: 20.45, electrones: [ 2, 8, 18, 32, 22, 9, 2 ] },
+      { z: 94, s: "Pu", n: "Plutonio", m: "244.0000", val: "", f: 10, c: 8, g: "actinidos", desc: "El plutonio (Pu, número atómico 94) es un elemento radiactivo transuránico de apariencia gris plateada, el cual pierde su brillo al oxidarse. Posee múltiples alótropos y diversos estados de oxidación.", densidad: 19.816, electrones: [ 2, 8, 18, 32, 24, 8, 2 ] },
+      { z: 95, s: "Am", n: "Americio", m: "243.0000", val: "", f: 10, c: 9, g: "actinidos", desc: "El americio (Am, número atómico 95) es un transuránico radiactivo creado en 1944. Ubicado debajo del europio en la tabla periódica, se le nombró en clara referencia al continente americano.", densidad: 12, electrones: [ 2, 8, 18, 32, 25, 8, 2 ] },
+      { z: 96, s: "Cm", n: "Curio", m: "247.0000", val: "", f: 10, c: 10, g: "actinidos", desc: "El curio (Cm, número atómico 96) es un elemento actínido sintético nombrado como tributo a Marie y Pierre Curie por sus aportes a la radiactividad. Se identificó por primera vez en California en 1944.", densidad: 13.51, electrones: [ 2, 8, 18, 32, 25, 9, 2 ] },
+      { z: 97, s: "Bk", n: "Berkelio", m: "247.0000", val: "", f: 10, c: 11, g: "actinidos", desc: "El berkelio (Bk, número atómico 97) es un elemento radiactivo de la serie de los actínidos que fue descubierto en 1949, debiendo su denominación a la ciudad de Berkeley, en California.", densidad: 14.78, electrones: [ 2, 8, 18, 32, 27, 8, 2 ] },
+      { z: 98, s: "Cf", n: "Californio", m: "251.0000", val: "", f: 10, c: 12, g: "actinidos", desc: "El californio (Cf, número atómico 98) es un actínido radiactivo sintetizado inicialmente en 1950 mediante bombardeo de curio. Posee una de las mayores masas atómicas observables a simple vista.", densidad: 15.1, electrones: [ 2, 8, 18, 32, 28, 8, 2 ] },
+      { z: 99, s: "Es", n: "Einstenio", m: "252.0000", val: "", f: 10, c: 13, g: "actinidos", desc: "El einstenio (Es, número atómico 99) rinde tributo con su nombre a Albert Einstein. Este actínido sintético fue identificado en los restos de la primera explosión termonuclear de la historia en 1952.", densidad: 8.84, electrones: [ 2, 8, 18, 32, 29, 8, 2 ] },
+      { z: 100, s: "Fm", n: "Fermio", m: "257.0000", val: "", f: 10, c: 14, g: "actinidos", desc: "El fermio (Fm, número atómico 100) destaca como el elemento más pesado que puede formarse mediante el bombardeo de neutrones, marcando el límite de la síntesis en cantidades macroscópicas.", densidad: "", electrones: [ 2, 8, 18, 32, 30, 8, 2 ] },
+      { z: 101, s: "Md", n: "Mendelevio", m: "258.0000", val: "", f: 10, c: 15, g: "actinidos", desc: "El mendelevio (Md, número atómico 101) es un actínido transuránico de naturaleza sintética. Es el primero de los elementos que ya no puede generarse macroscópicamente bombardeando isótopos más ligeros con neutrones.", densidad: "", electrones: [ 2, 8, 18, 32, 31, 8, 2 ] },
+      { z: 102, s: "No", n: "Nobelio", m: "259.0000", val: "", f: 10, c: 16, g: "actinidos", desc: "El nobelio (No, número atómico 102) es un elemento químico radiactivo y artificial, penúltimo miembro de los actínidos. Su nombre fue acuñado en homenaje a Alfred Nobel, el inventor de la dinamita.", densidad: "", electrones: [ 2, 8, 18, 32, 32, 8, 2 ] },
+      { z: 103, s: "Lr", n: "Lawrencio", m: "266.0000", val: "", f: 10, c: 17, g: "actinidos", desc: "El lawrencio (Lr, número atómico 103) cierra la serie de los actínidos. Su nombre honra al creador del ciclotrón, Ernest Lawrence, dispositivo clave para descubrir otros elementos artificiales.", densidad: "", electrones: [ 2, 8, 18, 32, 32, 8, 3 ] },
+      
+      /* --- CONTINÚA EL PERIODO 7 VISUAL (f: 7) --- */
+      { z: 104, s: "Rf", n: "Rutherfordio", m: "267.0000", val: "", f: 7, c: 4, g: "transicion", desc: "El rutherfordio (Rf, número atómico 104) es un elemento sintético y radiactivo de transición del bloque d, nombrado como homenaje al importante físico Ernest Rutherford.", densidad: 23.2, electrones: [ 2, 8, 18, 32, 32, 10, 2 ] },
+      { z: 105, s: "Db", n: "Dubnio", m: "268.0000", val: "", f: 7, c: 5, g: "transicion", desc: "El dubnio (Db, número atómico 105) es un elemento químico creado artificialmente, altamente radiactivo, que rinde tributo con su nombre a la población de Dubná, en Rusia, sede de su primer hallazgo.", densidad: 29.3, electrones: [ 2, 8, 18, 32, 32, 11, 2 ] },
+      { z: 106, s: "Sg", n: "Seaborgio", m: "269.0000", val: "", f: 7, c: 6, g: "transicion", desc: "El seaborgio (Sg, número atómico 106) es un elemento transicional superpesado. Sus isótopos son sumamente inestables, con una vida media máxima que apenas supera los pocos minutos.", densidad: 35, electrones: [ 2, 8, 18, 32, 32, 12, 2 ] },
+      { z: 107, s: "Bh", n: "Bohrio", m: "270.0000", val: "", f: 7, c: 7, g: "transicion", desc: "El bohrio (Bh, número atómico 107) es un elemento sintético llamado de esta forma por el físico danés Niels Bohr. Como todos los transactínidos, no aparece de forma natural y es muy radiactivo.", densidad: 37.1, electrones: [ 2, 8, 18, 32, 32, 13, 2 ] },
+      { z: 108, s: "Hs", n: "Hassio", m: "269.0000", val: "", f: 7, c: 8, g: "transicion", desc: "El hassio (Hs, número atómico 108) es un metal radiactivo sintético cuyo nombre hace honor a la región alemana de Hesse. Se han producido minúsculas cantidades de átomos de este elemento desde su descubrimiento.", densidad: 40.7, electrones: [ 2, 8, 18, 32, 32, 14, 2 ] },
+      { z: 109, s: "Mt", n: "Meitnerio", m: "278.0000", val: "", f: 7, c: 9, g: "transicion", desc: "El meitnerio (Mt, número atómico 109) es un elemento sintético que se caracteriza por su gran inestabilidad y radiactividad, con una vida media máxima de escasos segundos para su isótopo más longevo.", densidad: 37.4, electrones: [ 2, 8, 18, 32, 32, 15, 2 ] },
+      { z: 110, s: "Ds", n: "Darmstadtio", m: "281.0000", val: "", f: 7, c: 10, g: "transicion", desc: "El darmstadtio (Ds, número atómico 110) es un elemento superpesado y sintético. Su nivel de radiactividad es extremo, logrando sobrevivir apenas unos segundos en su isótopo de mayor duración.", densidad: 34.8, electrones: [ 2, 8, 18, 32, 32, 16, 2 ] },
+      { z: 111, s: "Rg", n: "Roentgenio", m: "282.0000", val: "", f: 7, c: 11, g: "transicion", desc: "El roentgenio (Rg, número atómico 111) fue generado artificialmente por vez primera en Alemania durante 1994. Es un metal extremadamente radiactivo y ajeno a los entornos naturales terrestres.", densidad: 28.7, electrones: [ 2, 8, 18, 32, 32, 17, 2 ] },
+      { z: 112, s: "Cn", n: "Copernicio", m: "285.0000", val: "", f: 7, c: 12, g: "transicion", desc: "El copernicio (Cn, número atómico 112) es un escasísimo elemento sintético de laboratorio. Su isótopo más constante decae en cuestión de segundos, evidenciando su extrema inestabilidad nuclear.", densidad: 14, electrones: [ 2, 8, 18, 32, 32, 18, 2 ] },
+      { z: 113, s: "Nh", n: "Nihonio", m: "286.0000", val: "", f: 7, c: 13, g: "transicion", desc: "El nihonio (Nh, número atómico 113) se produce de manera exclusivamente sintética. Es superpesado, altamente radiactivo y la vida media de su variante más perdurable no excede los 20 segundos.", densidad: 16, electrones: [ 2, 8, 18, 32, 32, 18, 3 ] },
+      { z: 114, s: "Fl", n: "Flerovio", m: "289.0000", val: "", f: 7, c: 14, g: "transicion", desc: "El flerovio (Fl, número atómico 114) es un elemento químico creado en laboratorios de Rusia a finales del siglo XX, recibiendo su denominación como tributo a dichas instalaciones nucleares.", densidad: 14, electrones: [ 2, 8, 18, 32, 32, 18, 4 ] },
+      { z: 115, s: "Mc", n: "Moscovio", m: "289.0000", val: "", f: 7, c: 15, g: "transicion", desc: "El moscovio (Mc, número atómico 115), anteriormente llamado eka-bismuto, es un superpesado de origen sintético cuya vida media se reduce a unas minúsculas fracciones de segundo.", densidad: 13.5, electrones: [ 2, 8, 18, 32, 32, 18, 5 ] },
+      { z: 116, s: "Lv", n: "Livermorio", m: "293.0000", val: "", f: 7, c: 16, g: "transicion", desc: "El livermorio (Lv, número atómico 116) rinde homenaje al Laboratorio Nacional estadounidense que contribuyó a su descubrimiento junto a científicos rusos. Se trata de un elemento artificial muy radiactivo.", densidad: 12.9, electrones: [ 2, 8, 18, 32, 32, 18, 6 ] },
+      { z: 117, s: "Ts", n: "Teneso", m: "294.0000", val: "", f: 7, c: 17, g: "metaloides", desc: "El teneso (Ts, número atómico 117) es el penúltimo integrante del periodo 7. Sintetizado en muy pequeñas proporciones, apenas un puñado de átomos de este elemento han sido observados oficialmente.", densidad: 7.17, electrones: [ 2, 8, 18, 32, 32, 18, 7 ] },
+      { z: 118, s: "Og", n: "Oganesón", m: "294.0000", val: "", f: 7, c: 18, g: "gases-nobles", desc: "El oganesón (Og, número atómico 118) cierra el actual séptimo período de la tabla periódica. Destaca por ser, de forma sintética, el último elemento y el integrante más pesado del grupo 18.", densidad: 4.95, electrones: [ 2, 8, 18, 32, 32, 18, 8 ] }
+    ];
+
+    let modoActual = 'nombre';
+    let enModoTablaCompleta = false;
+    let elementoActivoGlobal = null;
+
+    function construirTabla() {
+      const contenedor = document.getElementById("grid-tabla");
+      contenedor.innerHTML = "";
+
+      for (let col = 1; col <= 18; col++) {
+        const btnCol = document.createElement("div");
+        btnCol.className = "cabecera-columna";
+        btnCol.textContent = col;
+        btnCol.dataset.columna = col;
+        btnCol.onclick = () => alternarColumna(col, btnCol);
+        contenedor.appendChild(btnCol);
+      }
+
+      for (let f = 1; f <= 10; f++) {
+        if (f === 8) {
+          const sep = document.createElement("div");
+          sep.className = "separador-bloque";
+          contenedor.appendChild(sep);
+          continue;
+        }
+
+        for (let c = 1; c <= 18; c++) {
+          const elem = elementosBD.find(e => e.f === f && e.c === c);
+          const divCelda = document.createElement("div");
+
+          if (elem) {
+            divCelda.className = `celda ${elem.g}`;
+            divCelda.dataset.z = elem.z;
+            divCelda.dataset.s = elem.s;
+            divCelda.dataset.n = elem.n;
+            divCelda.dataset.grupo = elem.g;
+            divCelda.dataset.columna = elem.c;
+
+            divCelda.innerHTML = `
+              <input type="text" class="input-z" maxlength="3" placeholder="Z">
+              <input type="text" class="input-simbolo" maxlength="3" placeholder="Símb">
+              <input type="text" class="input-nombre" placeholder="Nombre">
+            `;
+
+            divCelda.addEventListener("click", () => {
+              if (enModoTablaCompleta) {
+                mostrarDetalleElemento(elem);
+              }
+            });
+          } else {
+            divCelda.className = "celda-vacia";
+          }
+          contenedor.appendChild(divCelda);
+        }
+      }
+      cambiarModo('nombre');
+    }
+
+    /**
+     * Oculta de manera segura todos los modales centrales (SRP)
+     */
+    function ocultarVisoresCentrales() {
+      document.getElementById("visor-tarjeta").classList.remove("visible");
+      document.getElementById("visor-resultados").classList.remove("visible");
+      elementoActivoGlobal = null; 
+    }
+
+    function mostrarDetalleElemento(elem) {
+      ocultarVisoresCentrales(); // Primero limpiamos todo
+      elementoActivoGlobal = elem; // Luego aseguramos el nuevo estado global
+      
+      const visor = document.getElementById("visor-tarjeta");
+      document.getElementById("v-z").textContent = elem.z;
+      document.getElementById("v-val").innerHTML = elem.val || "";
+      document.getElementById("v-simbolo").textContent = elem.s;
+      document.getElementById("v-nombre").textContent = elem.n;
+      document.getElementById("v-masa").textContent = elem.m || "";
+
+      // Restauramos las clases base limpiamente y añadimos la del grupo
+      visor.className = `visor-central visor-tarjeta visible ${elem.g}`;
+    }
+
+    // Escucha de evento en el visor central
+    document.getElementById("visor-tarjeta").addEventListener("click", () => {
+      if (elementoActivoGlobal) {
+        abrirModal(elementoActivoGlobal);
+      }
+    });
+
+    /**
+     * Población de datos y apertura segura del modal
+     */
+    function abrirModal(elem) {
+      const rootStyles = getComputedStyle(document.documentElement);
+      const colorGrupo = rootStyles.getPropertyValue(`--color-${elem.g}`).trim();
+      
+      let nombreGrupo = elem.g.replace('-', ' ');
+      nombreGrupo = nombreGrupo.charAt(0).toUpperCase() + nombreGrupo.slice(1);
+
+      document.getElementById("m-titulo").innerHTML = `${elem.n} (${elem.s})<sup>${elem.z}</sup>`;
+      document.getElementById("m-nombre-grupo").textContent = nombreGrupo;
+      document.getElementById("m-color").style.backgroundColor = colorGrupo;
+      document.getElementById("m-simbolo").textContent = elem.s;
+      document.getElementById("m-masa").textContent = (elem.m || "N/A") + " u";
+      
+      document.getElementById("m-desc").textContent = elem.desc || `Información detallada sobre el ${elem.n} no disponible actualmente.`;
+      
+      const elDensidad = document.getElementById("m-densidad");
+      elDensidad.textContent = elem.densidad ? `${elem.densidad} g/cm³` : "Dato no disponible";
+
+      dibujarModeloBohr(elem.electrones, colorGrupo);
+
+      document.getElementById("modal-detalle").classList.add("activo");
+    }
+
+    function cerrarModal(evento = null) {
+      if (evento && evento.target.id !== "modal-detalle") return;
+      document.getElementById("modal-detalle").classList.remove("activo");
+    }
+
+    function alternarColumna(colNum, elementoHTML) {
+      elementoHTML.classList.toggle("seleccionada");
+      actualizarFiltros();
+    }
+
+    function actualizarFiltros() {
+      const gruposChecked = Array.from(document.querySelectorAll('.leyenda input[type="checkbox"]:checked')).map(cb => cb.value);
+      const colsChecked = Array.from(document.querySelectorAll('.cabecera-columna.seleccionada')).map(el => parseInt(el.dataset.columna));
+      const celdas = document.querySelectorAll('.celda');
+
+      celdas.forEach(celda => {
+        const grupoElem = celda.dataset.grupo;
+        const colElem = parseInt(celda.dataset.columna);
+        const coincideGrupo = gruposChecked.length === 0 || gruposChecked.includes(grupoElem);
+        const coincideColumna = colsChecked.length === 0 || colsChecked.includes(colElem);
+        const activo = coincideGrupo && coincideColumna;
+        const inputs = celda.querySelectorAll('input');
+
+        if (activo) {
+          celda.classList.remove('atenuada');
+          aplicarReglasModo(celda, modoActual);
+        } else {
+          celda.classList.add('atenuada');
+          inputs.forEach(inpt => inpt.disabled = true);
+        }
+      });
+    }
+
+    function aplicarReglasModo(celda, modo) {
+      const inZ = celda.querySelector(".input-z");
+      const inS = celda.querySelector(".input-simbolo");
+      const inN = celda.querySelector(".input-nombre");
+
+      if (modo === "nombre") {
+        inZ.disabled = true; inS.disabled = true; inN.disabled = false;
+      } else if (modo === "simbolo") {
+        inZ.disabled = true; inS.disabled = false; inN.disabled = true;
+      } else if (modo === "num") {
+        inZ.disabled = false; inS.disabled = true; inN.disabled = true;
+      } else if (modo === "simbolo-num") {
+        inZ.disabled = false; inS.disabled = false; inN.disabled = true;
+      }
+    }
+
+    function cambiarModo(modo) {
+      modoActual = modo;
+      enModoTablaCompleta = false;
+      ocultarVisoresCentrales();
+
+      document.getElementById("marcador").style.display = "none";
+
+      const celdas = document.querySelectorAll(".celda");
+      celdas.forEach(celda => {
+        celda.classList.remove("correcto", "incorrecto");
+        const inputs = celda.querySelectorAll('input');
+        inputs.forEach(i => i.value = "");
+      });
+
+      actualizarFiltros();
+    }
+
+    function limpiarTabla() {
+      enModoTablaCompleta = false;
+      ocultarVisoresCentrales();
+
+      const checkboxes = document.querySelectorAll('.leyenda input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = false);
+
+      const cabeceras = document.querySelectorAll('.cabecera-columna');
+      cabeceras.forEach(c => c.classList.remove('seleccionada'));
+
+      const celdas = document.querySelectorAll(".celda");
+      celdas.forEach(celda => {
+        celda.classList.remove("correcto", "incorrecto");
+        const inputs = celda.querySelectorAll('input');
+        inputs.forEach(i => i.value = "");
+      });
+
+      document.getElementById("marcador").style.display = "none";
+      actualizarFiltros();
+    }
+
+    function normalizar(texto) {
+      return texto.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    /**
+     * Evalúa las respuestas y renderiza el resultado en el contenedor central
+     */
+    function corregir() {
+      const celdasVisibles = document.querySelectorAll(".celda:not(.atenuada)");
+      const totalSeleccionados = celdasVisibles.length;
+      let aciertos = 0;
+
+      const visorResultados = document.getElementById("visor-resultados");
+      ocultarVisoresCentrales(); // Limpiamos la zona central
+
+      // Validación defensiva contra NaN (División por cero) si no hay elementos seleccionados
+      if (totalSeleccionados === 0) {
+        const marcador = document.getElementById("marcador");
+        marcador.textContent = "No hay elementos activos para corregir.";
+        marcador.style.display = "block";
+        marcador.style.color = "#ffffff";
+        return;
+      }
+
+      celdasVisibles.forEach(celda => {
+        const inZ = celda.querySelector(".input-z");
+        const inS = celda.querySelector(".input-simbolo");
+        const inN = celda.querySelector(".input-nombre");
+
+        let esCorrecto = true;
+        let tieneAlgunCampoActivo = false;
+
+        if (!inZ.disabled) {
+          tieneAlgunCampoActivo = true;
+          if (inZ.value.trim() !== celda.dataset.z) esCorrecto = false;
+        }
+        if (!inS.disabled) {
+          tieneAlgunCampoActivo = true;
+          if (normalizar(inS.value) !== normalizar(celda.dataset.s)) esCorrecto = false;
+        }
+        if (!inN.disabled) {
+          tieneAlgunCampoActivo = true;
+          if (normalizar(inN.value) !== normalizar(celda.dataset.n)) esCorrecto = false;
+        }
+
+        if (tieneAlgunCampoActivo && esCorrecto) {
+          celda.classList.add("correcto");
+          celda.classList.remove("incorrecto");
+          aciertos++;
+        } else {
+          celda.classList.add("incorrecto");
+          celda.classList.remove("correcto");
+        }
+      });
+
+      // Cálculos del examen
+      const fallos = totalSeleccionados - aciertos;
+      const notaFinal = ((aciertos / totalSeleccionados) * 10).toFixed(1);
+
+      // Inyección de resultados en el DOM (Visor central)
+      document.getElementById("r-total").textContent = totalSeleccionados;
+      document.getElementById("r-correctos").textContent = aciertos;
+      document.getElementById("r-incorrectos").textContent = fallos;
+      
+      const elNota = document.getElementById("r-nota");
+      elNota.textContent = notaFinal;
+      elNota.className = "res-nota " + (notaFinal >= 5 ? "nota-aprobado" : "nota-suspenso");
+
+      // Mostramos la tarjeta de resultados
+      visorResultados.classList.add("visible");
+
+      // Update inferior
+      const marcador = document.getElementById("marcador");
+      marcador.style.display = "block";
+      marcador.textContent = `Corrección completada. Nota: ${notaFinal} / 10`;
+      marcador.style.color = "#ffffff"; // Contraste con el fondo azul
+    }
+
+    function mostrarTablaCompleta() {
+      enModoTablaCompleta = true;
+      ocultarVisoresCentrales();
+
+      const celdasVisibles = document.querySelectorAll(".celda:not(.atenuada)");
+      celdasVisibles.forEach(celda => {
+        celda.classList.remove("correcto", "incorrecto");
+
+        const inZ = celda.querySelector(".input-z");
+        const inS = celda.querySelector(".input-simbolo");
+        const inN = celda.querySelector(".input-nombre");
+
+        inZ.value = celda.dataset.z;
+        inS.value = celda.dataset.s;
+        inN.value = celda.dataset.n;
+
+        inZ.disabled = true;
+        inS.disabled = true;
+        inN.disabled = true;
+      });
+
+      const marcador = document.getElementById("marcador");
+      marcador.style.display = "block";
+      marcador.textContent = "Tabla completa mostrada. Haz clic en cualquier casilla para inspeccionar el elemento en el visor central.";
+      marcador.style.color = "#ffffff"; // Contraste con el fondo azul
+    }
+
+    construirTabla();
+  </script>
+</body>
+</html>
