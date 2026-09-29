@@ -273,6 +273,37 @@
     .ruleta-botones { display: flex; gap: 8px; width: 100%; justify-content: center;}
     .ruleta-botones button { padding: 8px 12px; font-size: 13px; }
 
+    /* --- ADAPTACIÓN PARA MÓVILES Y TABLETS --- */
+    @media (max-width: 900px) {
+      h1 { font-size: 22px; text-align: center; }
+      .panel-botones { flex-direction: column; align-items: stretch; }
+      
+      /* Visor central de la tabla: se vuelve flotante centrado para que no se descoloque */
+      .visor-central { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; position: fixed !important; z-index: 100; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); }
+      
+      /* Sopa de letras más pequeña para que quepa sin hacer scroll horizontal */
+      .sopa-grid { gap: 1px; padding: 2px; }
+      .sopa-celda { width: 20px !important; height: 20px !important; font-size: 12px; }
+      .sopa-simbolos li { font-size: 14px; padding: 4px; }
+      
+      /* Flechas más compactas */
+      .flecha-item { padding: 4px; font-size: 12px; min-height: 30px;}
+      .flecha-simbolo-celda { width: 30px; height: 35px; }
+      .flecha-simbolo-celda .fs-s { font-size: 14px; }
+      
+      /* Ruleta escalada (se encoge proporcionalmente) */
+      .ruleta-layout { min-height: 280px; }
+      .rosco-container { transform: scale(0.70); margin-top: -30px; }
+    }
+
+    @media (max-width: 480px) {
+      .rosco-container { transform: scale(0.55); margin-top: -60px; }
+      .drop-zones-grid { grid-template-columns: 1fr; } /* Drag&Drop en 1 sola columna vertical */
+    }
+    
+    /* Estilo para la selección táctil de Drag & Drop */
+    .drag-item.tap-seleccionado { border-color: #f39c12; background-color: #fef9e7; transform: scale(1.05); }
+
   </style>
 </head>
 <body>
@@ -810,7 +841,36 @@
                 // para que corregir() pueda leer la palabra completa con sus cruces.
                 c.classList.add('pendiente'); 
             }); 
-            
+         
+            // --- SOPORTE TÁCTIL (MÓVILES) ---
+        grid.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Evita que la pantalla haga scroll al jugar
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            if(this.juegoTerminado || !target || !target.classList.contains('sopa-celda')) return;
+            this.isDragging = true; this.celdaInicio = target;
+            document.querySelectorAll('.sopa-celda.pendiente').forEach(c => c.classList.remove('pendiente'));
+            this.limpiarSeleccionActual(); this.celdasSeleccionadasActualmente = [this.celdaInicio]; this.celdaInicio.classList.add('seleccionando');
+        }, {passive: false});
+
+        grid.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if(!this.isDragging || this.juegoTerminado) return;
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY); // Detecta la celda bajo el dedo
+            if(!target || !target.classList.contains('sopa-celda')) return;
+            this.limpiarSeleccionActual(); this.celdasSeleccionadasActualmente = this.calcularLineaRecta(this.celdaInicio, target); this.celdasSeleccionadasActualmente.forEach(c => c.classList.add('seleccionando'));
+        }, {passive: false});
+
+        document.addEventListener('touchend', () => {
+            if(!this.isDragging || this.juegoTerminado) return; 
+            this.isDragging = false; 
+            this.celdasSeleccionadasActualmente.forEach(c => { 
+                c.classList.remove('seleccionando'); 
+                c.classList.add('pendiente'); 
+            }); 
+            this.corregir();
+        });
             this.corregir();
         }); 
         
@@ -916,6 +976,38 @@
             // Utilizamos Event Delegation en los contenedores principales (SRP)
             const pool = document.getElementById("drag-pool");
             const dropGrid = document.getElementById("drop-zones-grid");
+
+            // --- SOPORTE TÁCTIL (CLICK PARA MOVER EN MÓVIL) ---
+            let itemTocadoMobile = null;
+            
+            document.addEventListener('click', (e) => {
+                if (this.juegoTerminado) return;
+
+                // 1. Si toca un elemento arrastrable
+                const clickedItem = e.target.closest('.drag-item');
+                if (clickedItem) {
+                    if (itemTocadoMobile) itemTocadoMobile.classList.remove('tap-seleccionado');
+                    itemTocadoMobile = clickedItem;
+                    itemTocadoMobile.classList.add('tap-seleccionado');
+                    return;
+                }
+
+                // 2. Si tiene un elemento seleccionado y toca una zona de destino
+                if (itemTocadoMobile) {
+                    const dropZone = e.target.closest('.drop-zone');
+                    const poolDestino = e.target.closest('.drag-pool');
+                    
+                    if (dropZone) {
+                        dropZone.appendChild(itemTocadoMobile);
+                        itemTocadoMobile.classList.remove('tap-seleccionado');
+                        itemTocadoMobile = null;
+                    } else if (poolDestino) {
+                        poolDestino.appendChild(itemTocadoMobile);
+                        itemTocadoMobile.classList.remove('tap-seleccionado');
+                        itemTocadoMobile = null;
+                    }
+                }
+            });
 
             // Evento: Iniciar arrastre (Guarda el ID del elemento arrastrado en el payload del evento)
             document.addEventListener('dragstart', (e) => {
