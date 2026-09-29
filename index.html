@@ -121,8 +121,9 @@
     .visor-masa { font-size: 18px; font-weight: 600; color: #222; }
 
     .visor-resultados { padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-    .visor-resultados.visible { opacity: 1; visibility: visible; pointer-events: none; z-index: 10;}
-    .res-titulo { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 12px; width: 100%; border-bottom: 2px solid #ecf0f1; padding-bottom: 5px;}
+    .visor-resultados.visible { opacity: 1; visibility: visible; pointer-events: auto; z-index: 10;}
+    .res-titulo { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 12px; width: 100%; border-bottom: 2px solid #ecf0f1; padding-bottom: 5px; cursor: grab;}
+    .res-titulo:active { cursor: grabbing; }
     .res-stat { font-size: 13px; margin: 4px 0; color: #333; width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 600;}
     .res-nota { font-size: 46px; font-weight: 900; margin-top: 12px; line-height: 1;}
     .nota-aprobado { color: #27ae60; }
@@ -236,6 +237,25 @@
     .modal-detalles p { margin: 15px 0; font-size: 15px; color: #333; line-height: 1.6; }
     .modal-detalles .info-destacada { font-size: 16px; margin-bottom: 25px; }
     .modal-detalles strong { color: #111; font-weight: 500; }
+
+    /* --- UNIR CON FLECHAS CSS --- */
+    .flechas-layout { display: flex; justify-content: space-between; position: relative; padding: 10px 15px; margin-top: 10px; }
+    .columna-nombres, .columna-simbolos { display: flex; flex-direction: column; gap: 6px; z-index: 2; width: 40%;}
+    .flecha-item { background: white; border: 2px solid #bdc3c7; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; min-height: 35px;}
+    .item-nombre { font-weight: bold; font-size: 14px; color: #2c3e50;}
+    .flecha-item:hover { border-color: #3498db; transform: scale(1.02); }
+    .flecha-item.seleccionado { border-color: #f39c12; box-shadow: 0 0 10px rgba(243, 156, 18, 0.5); background-color: #fef9e7; }
+    
+    /* Simular casilla tabla periódica para símbolos (Más compacta) */
+    .flecha-simbolo-celda { width: 42px; height: 48px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 3px; box-sizing: border-box; pointer-events: none;}
+    .flecha-simbolo-celda .fs-z { font-size: 10px; font-weight: bold; align-self: flex-start; color: #111; line-height: 1;}
+    .flecha-simbolo-celda .fs-s { font-size: 18px; font-weight: 900; line-height: 1; color: #000; margin: auto 0;}
+
+    #flechas-svg { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; overflow: visible;}
+    svg line { stroke: #7f8c8d; stroke-width: 3; stroke-linecap: round; transition: stroke 0.3s; }
+    svg line.linea-correcta { stroke: #27ae60; stroke-width: 4; }
+    svg line.linea-incorrecta { stroke: #e74c3c; stroke-width: 4; }
+
   </style>
 </head>
 <body>
@@ -246,7 +266,7 @@
     <h2>Juegos</h2>
     <button class="menu-opcion" onclick="cambiarVista('sopa')">🔍 Sopa de Letras</button>
     <button class="menu-opcion" onclick="cambiarVista('drag')">🖐️ Arrastrar y Soltar</button>
-    <button class="menu-opcion" onclick="cambiarVista('huecos')">📝 Rellenar Huecos</button>
+    <button class="menu-opcion" onclick="cambiarVista('huecos')">🔀 Unir con Flechas</button>
     
     <!-- ENLACES EXTERNOS -->
     <button class="menu-opcion" onclick="window.open('https://es.educaplay.com/recursos-educativos/30789507-la_tabla_periodica_en_2_de_eso.html', '_blank')">🐸 La rana científica</button>
@@ -354,8 +374,33 @@
     </div>
   </div>
 
+  <!-- VISTA 3 (NUEVA): UNIR CON FLECHAS -->
   <div id="vista-huecos" class="vista">
-    <div class="juego-contenedor"><h2>Rellenar Huecos</h2><p>Próximamente...</p><button class="btn-limpiar" onclick="cambiarVista('tabla')">Volver</button></div>
+    <div class="juego-contenedor" id="contenedor-flechas" style="position: relative;">
+      
+      <!-- Visor de puntuación -->
+      <div id="visor-resultados-flechas" class="visor-central visor-resultados" style="top:50%; left:50%; transform:translate(-50%, -50%); z-index:20;">
+        <div class="res-titulo">Puntuación Final</div>
+        <div class="res-stat"><span>Elementos:</span> <strong>10</strong></div>
+        <div class="res-stat"><span>Aciertos:</span> <strong id="flechas-r-correctos" style="color:#27ae60; font-size:16px;">0</strong></div>
+        <div class="res-stat"><span>Fallos:</span> <strong id="flechas-r-incorrectos" style="color:#c0392b; font-size:16px;">0</strong></div>
+        <div id="flechas-r-nota" class="res-nota">0.0</div>
+      </div>
+
+      <h2 style="color: var(--header-bg); margin-top:0; font-size:28px;">Unir con Flechas</h2>
+      <p style="color: #555; font-size: 15px; margin-bottom: 10px;">Haz clic en un nombre y luego en su símbolo para unirlos. Pulsa "Corregir" al terminar.</p>
+      
+      <div class="flechas-layout" id="flechas-layout">
+        <svg id="flechas-svg" width="100%" height="100%"></svg>
+        <div class="columna-nombres" id="columna-nombres"></div>
+        <div class="columna-simbolos" id="columna-simbolos"></div>
+      </div>
+
+      <div style="margin-top: 25px; display:flex; gap:10px; justify-content: center; position: relative; z-index: 2;">
+        <button class="btn-corregir" onclick="FlechasManager.corregir()">✅ Corregir</button>
+        <button class="btn-limpiar" onclick="cambiarVista('tabla')">⬅ Volver a la Tabla</button>
+      </div>
+    </div>
   </div>
 
   <div id="marcador" style="display:none;"></div>
@@ -534,6 +579,7 @@
       document.getElementById('sidebar').classList.remove('abierto');
       if (vistaId === 'sopa') SopaLetrasManager.inicializar();
       if (vistaId === 'drag') DragDropManager.inicializar();
+      if (vistaId === 'huecos') FlechasManager.inicializar();
     }
 
     let modoActual = 'nombre';
@@ -700,7 +746,19 @@
             if(!this.isDragging || this.juegoTerminado || !e.target.classList.contains('sopa-celda')) return;
             this.limpiarSeleccionActual(); this.celdasSeleccionadasActualmente = this.calcularLineaRecta(this.celdaInicio, e.target); this.celdasSeleccionadasActualmente.forEach(c => c.classList.add('seleccionando'));
         });
-        document.addEventListener('mouseup', () => { if(!this.isDragging || this.juegoTerminado) return; this.isDragging = false; this.celdasSeleccionadasActualmente.forEach(c => { c.classList.remove('seleccionando'); if (!c.classList.contains('acierto')) { c.classList.add('pendiente'); } }); });
+        document.addEventListener('mouseup', () => { 
+            if(!this.isDragging || this.juegoTerminado) return; 
+            this.isDragging = false; 
+            this.celdasSeleccionadasActualmente.forEach(c => { 
+                c.classList.remove('seleccionando'); 
+                // Añadimos 'pendiente' SIEMPRE, incluso si ya es un 'acierto',
+                // para que corregir() pueda leer la palabra completa con sus cruces.
+                c.classList.add('pendiente'); 
+            }); 
+            
+            this.corregir();
+        }); 
+        
       },
       calcularLineaRecta: function(inicio, fin) {
           const r1 = parseInt(inicio.dataset.r); const c1 = parseInt(inicio.dataset.c); const r2 = parseInt(fin.dataset.r); const c2 = parseInt(fin.dataset.c);
@@ -897,6 +955,249 @@
             document.getElementById("visor-resultados-drag").classList.add("visible");
         }
     };
+    /* --- LÓGICA DEL JUEGO: UNIR CON FLECHAS --- */
+    const FlechasManager = {
+        elementosObjetivo: [],
+        conexiones: [],
+        seleccionActual: null,
+        juegoTerminado: false,
+
+        inicializar: function() {
+            this.juegoTerminado = false;
+            this.conexiones = [];
+            this.seleccionActual = null;
+            document.getElementById("visor-resultados-flechas").classList.remove("visible");
+            document.getElementById("flechas-svg").innerHTML = "";
+
+            // Seleccionar 10 elementos aleatorios de la base de datos
+            this.elementosObjetivo = [...elementosBD].sort(() => 0.5 - Math.random()).slice(0, 10);
+            
+            // Barajar independientemente para que no coincidan en frente
+            const nombresAleatorios = [...this.elementosObjetivo].sort(() => 0.5 - Math.random());
+            const simbolosAleatorios = [...this.elementosObjetivo].sort(() => 0.5 - Math.random());
+
+            const colNombres = document.getElementById("columna-nombres");
+            const colSimbolos = document.getElementById("columna-simbolos");
+            colNombres.innerHTML = "";
+            colSimbolos.innerHTML = "";
+
+            nombresAleatorios.forEach(elem => {
+                const div = document.createElement("div");
+                div.className = "flecha-item item-nombre";
+                div.textContent = elem.n;
+                div.dataset.z = elem.z;
+                div.dataset.tipo = "nombre";
+                div.onclick = () => this.manejarClick(div);
+                colNombres.appendChild(div);
+            });
+
+            simbolosAleatorios.forEach(elem => {
+                const div = document.createElement("div");
+                div.className = "flecha-item item-simbolo";
+                div.dataset.z = elem.z;
+                div.dataset.tipo = "simbolo";
+                
+                // Extraer el color del grupo de CSS para que se vea igual que en la tabla
+                const colorGrupo = getComputedStyle(document.documentElement).getPropertyValue(`--color-${elem.g}`).trim();
+                
+                div.innerHTML = `
+                  <div class="flecha-simbolo-celda" style="background-color: ${colorGrupo};">
+                    <span class="fs-z">${elem.z}</span>
+                    <span class="fs-s">${elem.s}</span>
+                  </div>
+                `;
+                div.onclick = () => this.manejarClick(div);
+                colSimbolos.appendChild(div);
+            });
+            
+            // Redibujar si se cambia el tamaño de la ventana
+            if (this._bindResize) window.removeEventListener('resize', this._bindResize);
+            this._bindResize = () => this.redibujarLineas();
+            window.addEventListener('resize', this._bindResize);
+        },
+
+        manejarClick: function(elementoDOM) {
+            if (this.juegoTerminado) return;
+            
+            // Si hace click en el que ya tiene seleccionado, se deselecciona
+            if (this.seleccionActual === elementoDOM) {
+                this.seleccionActual.classList.remove("seleccionado");
+                this.seleccionActual = null;
+                return;
+            }
+
+            // Si hay algo seleccionado del MISMO tipo, cambiar la selección al nuevo
+            if (this.seleccionActual && this.seleccionActual.dataset.tipo === elementoDOM.dataset.tipo) {
+                this.seleccionActual.classList.remove("seleccionado");
+                this.seleccionActual = elementoDOM;
+                elementoDOM.classList.add("seleccionado");
+                return;
+            }
+
+            // Si no hay nada seleccionado, lo seleccionamos
+            if (!this.seleccionActual) {
+                this.seleccionActual = elementoDOM;
+                elementoDOM.classList.add("seleccionado");
+                return;
+            }
+
+            // Si se llega aquí, se ha pulsado uno de cada tipo. Crear la conexión (flecha)
+            const nodo1 = this.seleccionActual;
+            const nodo2 = elementoDOM;
+            
+            this.crearConexion(nodo1, nodo2);
+            
+            // Limpiar selección
+            this.seleccionActual.classList.remove("seleccionado");
+            this.seleccionActual = null;
+        },
+
+        crearConexion: function(nodoA, nodoB) {
+            const nodoNombre = nodoA.dataset.tipo === "nombre" ? nodoA : nodoB;
+            const nodoSimbolo = nodoA.dataset.tipo === "simbolo" ? nodoA : nodoB;
+
+            // Eliminar conexiones previas si se cambian de idea
+            this.eliminarConexion(nodoNombre);
+            this.eliminarConexion(nodoSimbolo);
+
+            // Dibujar la línea en el SVG
+            const svg = document.getElementById("flechas-svg");
+            const linea = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            
+            const conexion = {
+                nodoNombre: nodoNombre,
+                nodoSimbolo: nodoSimbolo,
+                linea: linea,
+                zNombre: nodoNombre.dataset.z,
+                zSimbolo: nodoSimbolo.dataset.z
+            };
+            
+            this.conexiones.push(conexion);
+            svg.appendChild(linea);
+            
+            this.actualizarPosicionLinea(conexion);
+        },
+
+        eliminarConexion: function(nodo) {
+            const index = this.conexiones.findIndex(c => c.nodoNombre === nodo || c.nodoSimbolo === nodo);
+            if (index !== -1) {
+                const con = this.conexiones[index];
+                con.linea.remove();
+                this.conexiones.splice(index, 1);
+            }
+        },
+
+        actualizarPosicionLinea: function(conexion) {
+            const posNombre = this.obtenerCentro(conexion.nodoNombre, "derecha");
+            const posSimbolo = this.obtenerCentro(conexion.nodoSimbolo, "izquierda");
+
+            conexion.linea.setAttribute("x1", posNombre.x);
+            conexion.linea.setAttribute("y1", posNombre.y);
+            conexion.linea.setAttribute("x2", posSimbolo.x);
+            conexion.linea.setAttribute("y2", posSimbolo.y);
+        },
+
+        obtenerCentro: function(elemento, lado) {
+            // Cambiamos 'contenedor-flechas' por 'flechas-layout'
+            const rectContenedor = document.getElementById("flechas-layout").getBoundingClientRect();
+            const rect = elemento.getBoundingClientRect();
+            
+            let x = rect.left - rectContenedor.left + rect.width / 2;
+            let y = rect.top - rectContenedor.top + rect.height / 2;
+
+            if (lado === "derecha") x = rect.right - rectContenedor.left;
+            if (lado === "izquierda") x = rect.left - rectContenedor.left;
+
+            return { x, y };
+        },
+
+        redibujarLineas: function() {
+            if(!document.getElementById("vista-huecos").classList.contains('activa')) return;
+            this.conexiones.forEach(c => this.actualizarPosicionLinea(c));
+        },
+
+        corregir: function() {
+            if (this.juegoTerminado) return;
+            this.juegoTerminado = true;
+
+            let aciertos = 0;
+            let fallos = 0;
+
+            this.conexiones.forEach(c => {
+                if (c.zNombre === c.zSimbolo) {
+                    c.linea.classList.add("linea-correcta");
+                    c.nodoNombre.style.borderColor = "#27ae60";
+                    c.nodoSimbolo.style.borderColor = "#27ae60";
+                    aciertos++;
+                } else {
+                    c.linea.classList.add("linea-incorrecta");
+                    c.nodoNombre.style.borderColor = "#e74c3c";
+                    c.nodoSimbolo.style.borderColor = "#e74c3c";
+                    fallos++;
+                }
+            });
+
+            // Los que se quedaron sin conectar cuentan como fallos
+            fallos += (10 - this.conexiones.length);
+
+            const notaFinal = ((aciertos / 10) * 10).toFixed(1);
+
+            document.getElementById("flechas-r-correctos").textContent = aciertos;
+            document.getElementById("flechas-r-incorrectos").textContent = fallos;
+            
+            const elNota = document.getElementById("flechas-r-nota");
+            elNota.textContent = notaFinal;
+            elNota.className = "res-nota " + (notaFinal >= 5 ? "nota-aprobado" : "nota-suspenso");
+
+            document.getElementById("visor-resultados-flechas").classList.add("visible");
+        }
+    };
+
+    /* --- LÓGICA PARA ARRASTRAR MARCADORES --- */
+    function hacerArrastrable(elemento) {
+        if (!elemento) return;
+        const cabecera = elemento.querySelector('.res-titulo');
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        if (cabecera) {
+            cabecera.onmousedown = iniciarArrastre;
+        } else {
+            elemento.onmousedown = iniciarArrastre;
+        }
+
+        function iniciarArrastre(e) {
+            e.preventDefault();
+            elemento.style.transition = "none"; // <-- Desactiva la animación al agarrar
+            
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = detenerArrastre;
+            document.onmousemove = arrastrar;
+        }
+
+        function arrastrar(e) {
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            
+            elemento.style.top = (elemento.offsetTop - pos2) + "px";
+            elemento.style.left = (elemento.offsetLeft - pos1) + "px";
+        }
+
+        function detenerArrastre() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            elemento.style.transition = ""; // <-- Restaura la animación al soltar
+        }
+    }
+
+    // Aplicamos la función a todos los cuadros de resultados
+    hacerArrastrable(document.getElementById("visor-resultados"));
+    hacerArrastrable(document.getElementById("visor-resultados-sopa"));
+    hacerArrastrable(document.getElementById("visor-resultados-drag"));
+    hacerArrastrable(document.getElementById("visor-resultados-flechas"));
 
     construirTabla();
   </script>
